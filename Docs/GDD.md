@@ -265,40 +265,348 @@ Ammo is selected from a bottom toolbar showing icons with remaining count. Based
 
 ## Zombie Types
 
-Zombies approach in waves with escalating difficulty. Each type has distinct behavior, speed, and interactions with destroyed terrain.
+Zombies approach in waves with escalating difficulty. Each type has distinct behavior, speed, and **specific interactions with terrain, bridges, gaps, and ammo types**. The Bestiary rates each on a 6-pip scale: HP, SPD (speed), DMG (gate damage), ARM (armor/projectile resistance).
 
-### Basic Zombies
+### Common Zombies
 
-From the Bestiary concept art, each zombie has stats rated on a 6-pip scale for HP, SPD (speed), DMG (damage), and ARM (armor).
+#### Shambler
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 1/6 | **Rarity** | Common |
+| SPD | 1/6 | **Unlock** | Level 1-1 (starting enemy) |
+| DMG | 1/6 | **Visual** | Classic green zombie, slouched posture, arms forward |
+| ARM | 0/6 | | |
 
-| Zombie | HP | SPD | DMG | ARM | Behavior |
-|--------|-----|-----|-----|-----|----------|
-| **Shambler** | 1/6 | 1/6 | 1/6 | 0/6 | Basic zombie. Slow, fragile, travels in packs. Falls easily off broken bridges. The bread and butter of every wave. |
-| **Sprinter** | 1/6 | 5/6 | 1/6 | 0/6 | Fast runner, can jump small gaps (< 2 tiles). Fragile but hard to time shots against. |
-| **Brute** | 5/6 | 1/6 | 4/6 | 3/6 | Heavy tank, can bash through weakened structures. Slow but very hard to kill. |
-| **Screecher** | 2/6 | 3/6 | 2/6 | 0/6 | Screams to buff nearby zombies' speed. Purple-tinted, ethereal appearance. |
-| **Engineer** | 2/6 | 2/6 | 1/6 | 1/6 | The core mechanic — rebuilds destroyed bridges if left alive. Carries tools and hard hat. Prioritize killing! |
+**Behavior:** The basic zombie. Walks slowly in a straight line following the path. Travels in packs of 3-8.
+
+**World interactions:**
+- **Destroyed bridge** → Falls into the gap. Comedic scream, splat. Dead.
+- **Damaged bridge** → Walks across cautiously (slower). Bridge may collapse under them if weakened enough (< 25% HP)
+- **Rubble pile in gap** → If enough debris has accumulated from destroyed bridges, Shamblers can stumble across the rubble. This punishes players who destroy bridges in the center (debris piles up) vs. the edges (debris scatters)
+- **Frozen surface (Ice Bomb)** → Slides uncontrollably, may slide off the path or into a gap
+- **Tar zone** → Slowed to 50% speed. Vulnerable to fire combo
+- **Fire zone** → Takes burn damage over time, keeps walking
+- **Direct boulder hit** → Instant kill (1 HP)
+
+**Why they matter:** Cannon fodder that teaches the basic loop. Their weakness to EVERYTHING makes the player feel powerful early on.
+
+---
+
+#### Sprinter
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 1/6 | **Rarity** | Common |
+| SPD | 5/6 | **Unlock** | Level 1-3 |
+| DMG | 1/6 | **Visual** | Lean zombie, leaning forward, legs blurred with speed lines |
+| ARM | 0/6 | | |
+
+**Behavior:** Runs at 3x Shambler speed. Moves in bursts — sprints between bridges, briefly pauses at each crossing to "assess" (0.5s), then sprints again.
+
+**World interactions:**
+- **Destroyed bridge** → Can **leap small gaps** (< 2 tile widths). If the bridge is fully destroyed leaving a wide gap, they fall in. If only partially destroyed (a few planks missing), they can jump across
+- **Damaged bridge** → Runs across at full speed without slowing — doesn't care about creaking wood
+- **Rubble pile** → Can jump over small rubble piles that would slow Shamblers
+- **Frozen surface** → Slides much farther than Shamblers due to momentum. Often slides completely off the path — effective counter
+- **Tar zone** → Slowed to normal Shambler speed (major nerf). Tar is the hard counter
+- **Direct boulder hit** → Hard to hit because of speed + they're often far away (small target). Splash damage from Fireball is more effective
+- **At the gate** → Arrives first, starts doing chip damage before the horde catches up
+
+**Why they matter:** Forces players to fully destroy bridges (not just damage them). Punishes lazy play. Creates urgency — "they're already at Bridge 3 while I'm still aiming at Bridge 1!"
+
+---
+
+#### Brute
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 5/6 | **Rarity** | Uncommon |
+| SPD | 1/6 | **Unlock** | Level 2-3 |
+| DMG | 4/6 | **Visual** | Massive, hulking green zombie. Twice the size of Shamblers. Visible muscles, heavy jaw |
+| ARM | 3/6 | | |
+
+**Behavior:** Slow, extremely tough. Walks with ground-shaking footsteps (subtle screen vibration). Other zombies cluster behind Brutes, using them as moving shields.
+
+**World interactions:**
+- **Destroyed bridge** → Falls in like everyone else. BUT: due to mass, the impact at the bottom creates a larger rubble pile, making it easier for later zombies to cross the debris
+- **Damaged bridge** → Can **bash through weakened bridges** (< 50% HP) instead of crossing normally. The bridge collapses under their weight but they survive and continue walking on the debris. This means a half-destroyed bridge is WORSE than an intact one when a Brute approaches — they'll destroy it AND create a rubble crossing
+- **Intact bridge** → Walks across normally. Bridge shakes and loses 10% HP from the weight alone
+- **Rubble pile** → Walks straight through, compacting the rubble into a more stable crossing for following zombies
+- **Frozen surface** → Too heavy to slide. Ice cracks under them but barely slows them. Ice Bomb is ineffective
+- **Tar zone** → Slowed to 25% speed (their heavy feet stick). Very effective counter
+- **Fire zone** → Takes burn damage but high HP means they survive multiple ticks
+- **Direct boulder hit** → Takes damage but survives 2-3 hits. Knocked back slightly on impact (only zombie type that gets knockback instead of dying)
+- **Fireball** → Effective: area burn damage stacks against their slow movement
+- **At the gate** → Deals massive gate damage per hit (4/6). Two Brutes at the gate can end a level fast
+
+**Why they matter:** Forces strategic thinking about bridge damage. A half-destroyed bridge + incoming Brute = worse outcome than either a fully intact or fully destroyed bridge. Players learn to commit fully to bridge destruction.
+
+---
+
+#### Screecher
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Uncommon |
+| SPD | 3/6 | **Unlock** | Level 3-3 |
+| DMG | 2/6 | **Visual** | Purple/ethereal zombie, mouth wide open, visible sound waves emanating. Smaller, hunched |
+| ARM | 0/6 | | |
+
+**Behavior:** Walks at medium speed. Every 5 seconds, **screams** — emitting visible purple sound-wave rings that buff all zombies within a radius.
+
+**World interactions:**
+- **Scream buff** → All zombies within 3-tile radius get +50% speed for 4 seconds. This includes Brutes (suddenly dangerous), Sprinters (nearly uncatchable), and Engineers (repair faster)
+- **Destroyed bridge** → Falls in. The scream dies with them — all buffed zombies immediately lose the speed boost. Killing a Screecher mid-scream feels incredibly satisfying
+- **Multiple Screechers** → Scream buffs STACK. Two Screechers near each other = +100% speed for nearby zombies. Nightmarish
+- **Frozen surface** → Scream shatters ice in the area (thematic: sonic vibration). Cancels Ice Bomb effects nearby
+- **Direct hit** → Low HP, dies easily. BUT they tend to walk in the middle of packs, making them hard to hit without splash damage
+- **Positioning** → Always spawns in the CENTER of a zombie group, shielded by surrounding zombies
+
+**Why they matter:** Priority target. Creates a "find the Screecher" mini-game within each wave. Rewards splash damage weapons (Fireball catches the whole pack). Punishes players who ignore them — a buffed wave moves terrifyingly fast.
+
+---
 
 ### Builder Zombies (The Core Twist)
 
-Builder zombies are the **key mechanic** that distinguishes Drop Dead Keep. They carry materials and can rebuild destroyed crossings.
+Builder zombies are the **key mechanic** that distinguishes Drop Dead Keep. They carry materials and can rebuild or bypass destroyed crossings. Each builder type counters a specific defensive strategy.
 
-| Builder Type | Carries | Behavior | Counter |
-|-------------|---------|----------|---------|
-| **Plank Carrier** | Wooden planks (2-3) | Drops planks across small gaps to create a walkway. Other zombies can cross the plank. | Destroy planks with fire; planks are fragile (1 hit) |
-| **Ladder Zombie** | Tall ladder | Props ladder against cliff faces to create alternate vertical routes, bypassing bridges entirely. | Knock ladder over with boulder impact nearby |
-| **Rope Thrower** | Grapple & rope | Throws rope across wide gaps. Creates a slow single-file crossing. | Cut rope by hitting the anchor point |
-| **Engineer** | Tools & materials | Slowly repairs destroyed bridges back to partial functionality. Must stand still while repairing. | Easy to hit while stationary — prioritize! |
-| **Raft Builder** | Logs & bindings | At water crossings, builds a raft to float across instead of using the bridge. | Sink raft with a direct hit |
+#### Engineer
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Uncommon |
+| SPD | 2/6 | **Unlock** | Level 1-4 |
+| DMG | 1/6 | **Visual** | Green zombie with hard hat, tool belt, carrying wooden planks and hammer |
+| ARM | 1/6 | | |
+
+**Behavior:** Walks toward the nearest destroyed bridge. When it reaches a gap, it stops and begins a **4-step repair sequence** (see World Art concept):
+
+```
+1. ARRIVES (walks to gap edge)     → 0.5s
+2. PLACES PLANK (lays board)       → 1.5s  ← Progress bar starts
+3. HAMMERS (builds the crossing)   → 3.0s  ← Stationary, easy to hit!
+4. COMPLETE (bridge restored)      → Bridge at 50% HP
+```
+
+**World interactions:**
+- **Destroyed bridge** → Repairs it to 50% HP (partial restoration). The rebuilt bridge is weaker than the original — one more boulder hit destroys it again
+- **Partially destroyed bridge** → Repairs to 75% HP. Can restore damaged bridges too
+- **While repairing** → Must stand still for ~5 seconds total. Stationary target. This is the player's window — Engineers are the easiest zombie to snipe IF you spot them in time
+- **Killed while repairing** → Drops materials. Repair progress resets. Another Engineer must start over
+- **Multiple Engineers** → Can repair simultaneously on different bridges. Overwhelms the player's ability to snipe them all
+- **Fire zone** → Tools catch fire. Engineer panics and runs around briefly before dying. Does NOT repair while on fire
+- **Frozen** → Repair paused while frozen. Timer resumes when thaw
+- **Rubble pile** → Ignores rubble. Only repairs proper bridge structures
+
+**Why they matter:** THE defining mechanic. Without Engineers, the game would be "destroy all bridges, win." Engineers force constant re-engagement with already-cleared areas. They turn the game from a puzzle into a dynamic tug-of-war.
+
+---
+
+#### Plank Carrier
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Uncommon |
+| SPD | 1/6 | **Unlock** | Level 2-4 |
+| DMG | 1/6 | **Visual** | Shambler carrying 2-3 wooden planks on its back. Planks extend above its head, making it a taller target |
+| ARM | 0/6 | | |
+
+**Behavior:** Walks toward the nearest gap. When it reaches a destroyed bridge, it drops its planks across the gap to create a **makeshift walkway**. Does NOT rebuild the bridge — just lays boards flat.
+
+**World interactions:**
+- **Destroyed bridge** → Drops planks across the gap. Creates a narrow, fragile crossing (1 tile wide). Other zombies can walk across single-file
+- **Plank crossing** → Planks have very low HP (1 hit from any ammo destroys them). But if the player doesn't notice, an entire wave can cross
+- **Killed before reaching gap** → Drops planks where it dies. Planks become inert debris on the path (cosmetic, no gameplay effect)
+- **Fire** → Planks are wood — Fireball ignites them. Burning planks collapse after 2 seconds, dropping any zombie on them into the gap. VERY satisfying combo
+- **Ice** → Planks become slippery. Zombies crossing have a 50% chance of sliding off into the gap
+- **Multiple Plank Carriers** → Can stack planks to create a wider, more stable crossing (2-3 planks = safe walkway). Must destroy quickly before they accumulate
+- **Brute on planks** → Planks immediately snap under the weight. Brute falls in. Hilarious
+
+**Why they matter:** Creates a "whack-a-mole" dynamic. Even after destroying a bridge, you must watch for Plank Carriers laying quick fixes. Rewards vigilance and fire ammo.
+
+---
+
+#### Ladder Zombie
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Rare |
+| SPD | 2/6 | **Unlock** | Level 3-4 |
+| DMG | 1/6 | **Visual** | Zombie carrying a tall wooden ladder vertically on its back. Very tall profile, easy to spot but hard to hit (narrow) |
+| ARM | 0/6 | | |
+
+**Behavior:** Instead of following the winding switchback path, Ladder Zombies head for **cliff edges** and prop their ladder against the cliff face to create a shortcut. They bypass bridges entirely — climbing straight up/down between path levels.
+
+**World interactions:**
+- **Cliff edge** → Props ladder against the cliff. Other zombies can now climb the ladder to skip an entire switchback section (bypasses 1-2 bridges)
+- **Ladder placed** → Ladder stays permanently until destroyed. Has moderate HP (2 boulder hits). Creates an alternate route that persists across waves
+- **Boulder near ladder** → Splash damage can knock the ladder over. Must hit within ~2 tiles of the ladder base
+- **Fire** → Ladder is wood — burns and collapses after 3 seconds
+- **Killed before placing** → Drops ladder on the ground. Inert
+- **Multiple ladders** → Multiple shortcuts = zombies reach the gate much faster, bypassing most of the path. Critical threat in late game
+- **Ice on cliff** → Ladder becomes slippery. Zombies fall off mid-climb
+
+**Why they matter:** Forces players to think beyond bridges. Even if every bridge is destroyed, Ladder Zombies can create entirely new routes. Players must watch the cliff edges, not just the bridges.
+
+---
+
+#### Rope Thrower
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Rare |
+| SPD | 2/6 | **Unlock** | Level 3-1 |
+| DMG | 1/6 | **Visual** | Zombie with coiled rope over one shoulder and a grappling hook in hand |
+| ARM | 0/6 | | |
+
+**Behavior:** When it reaches a wide gap (too wide for planks), it throws a grappling hook across and anchors a rope. Creates a single-file rope crossing that zombies traverse slowly, hand-over-hand.
+
+**World interactions:**
+- **Wide gap** → Throws rope across. Rope crossing is slow (zombies move at 25% speed on rope) but functional
+- **Rope HP** → Very fragile — any direct hit on the rope OR either anchor point snaps it. All zombies currently on the rope fall into the gap
+- **Multiple zombies on rope** → Creates a satisfying cascade when cut — 3-4 zombies fall in sequence
+- **Fire** → Rope burns instantly. Snap + cascade
+- **Wind** → Rope swings, making crossing even slower (10% speed in wind)
+- **Killed before throwing** → Rope coils on ground. Inert
+
+**Why they matter:** Counters the "wide gap = permanent safety" assumption. Forces players to maintain vigilance over gaps they thought were secure. The rope-cutting cascade is one of the most satisfying moments in the game.
+
+---
+
+#### Raft Builder
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Rare |
+| SPD | 1/6 | **Unlock** | Level 2-2 (World 2: water crossings) |
+| DMG | 1/6 | **Visual** | Zombie carrying logs and vine bindings. Stocky, hunched under the weight |
+| ARM | 0/6 | | |
+
+**Behavior:** Only relevant at water crossings (chasms with water instead of empty drops). Builds a small raft and floats across, completely ignoring the bridge above.
+
+**World interactions:**
+- **Water crossing** → Builds raft in 3 seconds. Floats across at Shambler speed. Other zombies can ride if they arrive in time (max 3 per raft)
+- **Direct hit on raft** → Raft sinks. All passengers drown. Raft debris floats downstream
+- **Fire** → Logs are slow to ignite (wet wood). Fireball not very effective on rafts
+- **Ice Bomb** → VERY effective. Freezes the water surface — raft gets stuck in ice. Zombies stranded on frozen raft become sitting ducks
+- **Boulder in water** → Creates splash that rocks nearby rafts. Zombies may fall off into water
+- **Current (some levels)** → Water flows, pushing rafts downstream. Raft may miss the landing point
+
+**Why they matter:** Introduces a water terrain type that requires different counterplay. Bridges over water can be destroyed safely (debris sinks, no rubble pile), but Raft Builders bypass the bridge entirely.
+
+---
 
 ### Elite Zombies (Late Game)
 
-| Elite | HP | Special |
-|-------|----|---------|
-| **Shield Bearer** | 40 | Carries a door/shield that blocks one frontal projectile hit before breaking |
-| **Necromancer** | 30 | Resurrects fallen zombies within a radius; kill quickly or cleared areas refill |
-| **Siege Tower** | 150 | Mobile wooden tower pushed by multiple zombies; acts as portable bridge over any gap |
-| **Giant** | 200 | Enormous; can wade through shallow chasms; shakes screen on footsteps |
+Elite zombies are rare, powerful, and dramatically change the flow of a wave. Only 1-2 appear per wave. They're visually imposing — even at the far end of the screen, their silhouette is unmistakable.
+
+#### Shield Bearer
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 3/6 | **Rarity** | Rare |
+| SPD | 2/6 | **Unlock** | Level 2-5 |
+| DMG | 2/6 | **Visual** | Zombie carrying a large wooden door/shield held overhead like an umbrella. Shield has nails and rivets visible |
+| ARM | 5/6 (with shield) → 0/6 (without) | | |
+
+**Behavior:** Holds shield above its head, blocking incoming projectiles from above (remember: player fires from the castle DOWNWARD). Shield absorbs one hit before shattering, leaving the zombie exposed.
+
+**World interactions:**
+- **Boulder from above** → Shield absorbs the hit. Shield shatters with satisfying wood-splintering effect. Zombie now unshielded and vulnerable
+- **Fireball** → Shield catches fire and burns away over 2 seconds. Zombie takes burn damage even with shield up (fire spreads around it)
+- **Ice Bomb** → Freezes both shield and zombie. Shield becomes brittle — next hit shatters both shield and zombie
+- **Splash damage** → Shield only protects from direct overhead hits. Splash damage from a nearby impact can hit the zombie from the side
+- **Destroyed bridge** → Falls in like normal. Shield doesn't help with falling
+- **Other zombies walk behind** → Shield Bearer's shield provides overhead cover for zombies directly behind it (1-2 tiles). Creates a "convoy" effect
+- **At the gate** → Bashes gate with the shield for bonus damage on first hit
+
+**Why they matter:** Punishes single-target boulder spam. Rewards tactical ammo choices (fire to burn shield, ice to make it brittle) and splash damage. The "convoy" effect means killing the Shield Bearer first exposes the group behind them.
+
+---
+
+#### Necromancer
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 2/6 | **Rarity** | Elite |
+| SPD | 1/6 | **Unlock** | Level 3-2 |
+| DMG | 1/6 | **Visual** | Robed zombie with glowing purple eyes and raised arms. Floats slightly above the ground. Purple energy trails |
+| ARM | 0/6 | | |
+
+**Behavior:** Walks slowly. Every 8 seconds, raises arms and casts a **resurrect pulse** — any zombie that died within a 4-tile radius in the last 30 seconds rises again with 50% HP.
+
+**World interactions:**
+- **Resurrect pulse** → Dead zombies rise as "Risen" variants — slightly faster, greenish-purple glow, 50% of original HP. Even zombies that fell into gaps can climb back out if the gap is shallow enough
+- **Killed zombies near Necromancer** → Will be resurrected unless the Necromancer is killed first. Creates a priority target dynamic — kill the Necromancer BEFORE killing the horde, or they'll just come back
+- **Necromancer killed** → All Risen zombies immediately collapse. Satisfying cascade of zombie deaths
+- **Fire** → Effective. Sets robes ablaze. Cannot cast while burning (3-second interrupt)
+- **Ice** → Freezes the Necromancer but does NOT stop an active resurrect pulse already in progress
+- **Destroyed bridge** → Falls in. Resurrect pulses cannot reach zombies that fell into deep gaps (below a certain Y-depth threshold)
+- **Multiple Necromancers** → Extremely dangerous. Can resurrect each OTHER if positioned right. Must be killed simultaneously or in quick succession
+
+**Why they matter:** Completely changes the kill priority. Normally, you kill whatever's closest. With a Necromancer present, you must target them FIRST (even though they're usually in the back of the pack). Rewards precision aiming and splash damage to hit the protected Necromancer within the horde.
+
+---
+
+#### Siege Tower
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 6/6 | **Rarity** | Elite |
+| SPD | 0.5/6 | **Unlock** | Level 4-3 |
+| DMG | 3/6 | **Visual** | Massive wooden tower on wheels, pushed by 4 Shamblers. Visible ropes, wooden beams, crude wheels. Towers above everything else on screen, even at distance |
+| ARM | 4/6 | | |
+
+**Behavior:** A mobile structure pushed by 4 Shamblers. Moves extremely slowly. When it reaches a gap, it falls forward like a drawbridge, creating a PERMANENT wide crossing that's much harder to destroy than planks.
+
+**World interactions:**
+- **Destroyed bridge** → Topples forward across the gap. Creates a massive, durable crossing (takes 3-4 boulder hits to destroy). All zombies can cross freely
+- **Intact bridge** → Passes over normally, continuing to the next gap
+- **Fire** → Very effective! The tower is all wood. Fireball sets it ablaze — burns for 5 seconds, then collapses. If it collapses while spanning a gap, it takes any zombies on it down too
+- **Ice** → Freezes the wheels. Pushing Shamblers slip on the ice and lose formation. Tower stops for 5 seconds
+- **Boulder** → Chunks break off but tower continues. Must hit 3-4 times to destroy. Each hit knocks off one of the pushing Shamblers (tower slows 25% per lost pusher)
+- **Kill the pushers** → With all 4 Shamblers dead, the tower stops permanently. Becomes a static obstacle blocking the path (zombies must walk around it)
+- **Mega Bomb** → One-shots the tower. This is the Mega Bomb's designed "aha" moment
+
+**Why they matter:** The "boss enemy." Forces players to use their best ammo. Creates dramatic tension — you can see the tower slowly approaching from the top of the screen for an entire wave. Fire and Mega Bomb become essential. Killing the pushers is a creative alternative strategy.
+
+---
+
+#### Giant
+| Stat | Rating | | |
+|------|--------|-|-|
+| HP | 6/6 | **Rarity** | Elite |
+| SPD | 0.5/6 | **Unlock** | Level 4-5 (final levels) |
+| DMG | 6/6 | **Visual** | Enormous zombie, 3x the size of a Brute. Visible even at the far end of the screen. Ground cracks under each step. Tiny zombies walk between its legs |
+| ARM | 5/6 | | |
+
+**Behavior:** Walks with earth-shaking footsteps (screen vibration every 2 seconds). So massive it can WADE through shallow chasms — destroyed bridges don't stop it unless the gap is very deep.
+
+**World interactions:**
+- **Shallow gap (< 3 tiles deep)** → Wades through. Doesn't even slow down. This is terrifying — the one enemy that ignores your primary mechanic
+- **Deep gap (≥ 3 tiles)** → Falls in. But takes 2-3 seconds to actually fall (grabs the edge, struggles). Player can hear it groaning. Satisfying delayed payoff
+- **Damaged bridge** → Collapses the bridge just by walking on it. No bridge survives a Giant
+- **Rubble** → Kicks rubble aside, clearing the pile. Actually helps the player by preventing rubble crossings
+- **Boulder** → Barely notices. Takes 5-6 hits to kill. Each hit staggers it briefly (0.5s pause) but no knockback
+- **Fireball** → Moderate damage. Giant swats at the flames, creating a brief fire splash that can damage nearby zombies (friendly fire)
+- **Ice Bomb** → Slows for 3 seconds but cannot fully freeze. Too massive
+- **Mega Bomb** → Deals 60% of Giant's HP. The only ammo that meaningfully damages it in one shot
+- **Other zombies** → Small zombies walk between the Giant's legs, protected from overhead projectiles by its body mass
+- **At the gate** → Deals catastrophic damage. 2 hits from a Giant = gate destroyed. THE highest priority target
+- **Killed** → Falls forward with a massive screen-shaking impact. Crushes any zombies directly in front of it. Creates a rubble pile from its own body that blocks the path for 10 seconds
+
+**Why they matter:** The ultimate test. Forces players to commit EVERYTHING — Mega Bombs, sustained boulder fire, tactical ammo combos. The fact that it can wade through shallow gaps means players need deep chasms (multiple bridge destructions) or concentrated firepower. Its death animation (crushing everything in front of it) rewards the kill dramatically.
+
+---
+
+### Zombie Interaction Matrix
+
+Quick reference for how each zombie type interacts with key game elements:
+
+| Zombie | Destroyed Bridge | Damaged Bridge | Rubble Pile | Ice | Fire | Tar | Boulder | Best Counter |
+|--------|-----------------|----------------|-------------|-----|------|-----|---------|-------------|
+| **Shambler** | Falls in | Crosses slowly | Can cross | Slides off | Burns | Slowed 50% | 1-hit kill | Any bridge destruction |
+| **Sprinter** | Jumps small gaps | Runs across | Jumps over | Slides far off | Burns | Slowed to Shambler speed | Hard to hit | Tar + bridge destruction |
+| **Brute** | Falls in (big rubble) | Bashes through if <50% | Compacts it | Barely affected | Burns slowly | Slowed 75% | 2-3 hits, knockback | Full bridge destruction + fire |
+| **Screecher** | Falls in | Crosses | Crosses | Shatters nearby ice | Burns | Slowed | 1-2 hits | Splash damage into pack |
+| **Engineer** | Repairs it! | Repairs it! | Ignores | Frozen, paused | Panics, dies | Slowed | 1-2 hits | Snipe while repairing |
+| **Plank Carrier** | Drops planks across | Crosses | Crosses | Planks slippery | Planks burn! | Slowed | 1 hit | Fire ammo |
+| **Ladder Zombie** | Bypasses via cliff | Uses ladder instead | Bypasses | Ladder slippery | Ladder burns | Slowed | 1-2 hits | Watch cliff edges |
+| **Rope Thrower** | Throws rope across | Uses rope | Throws rope | Rope frozen stiff | Rope burns! | Slowed | 1 hit | Hit the anchor |
+| **Raft Builder** | N/A (water only) | N/A | N/A | Water freezes, stuck | Wet wood resists | N/A | Sink raft | Ice Bomb |
+| **Shield Bearer** | Falls in | Crosses | Crosses | Brittle shield | Burns shield away | Slowed | Shield blocks 1 hit | Fire or splash |
+| **Necromancer** | Falls in | Crosses | Crosses | Frozen, can't cast | Burns, interrupted | Slowed | 1-2 hits | Kill FIRST |
+| **Siege Tower** | Bridges the gap! | Crushes it | Rolls over | Wheels freeze | Burns down! | Wheels stick | 3-4 hits | Fire or Mega Bomb |
+| **Giant** | Wades through shallow | Collapses it | Kicks aside | Barely slowed | Swats at flames | Slowed | 5-6 hits | Mega Bomb + deep gaps |
 
 ---
 
