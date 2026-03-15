@@ -605,6 +605,77 @@ Inspired by George Fan's GDC 2012 talk ["How I Got My Mom to Play Through Plants
 6. **Eloquent Caveman** — Any text that does appear is terse, direct: "DRAG TO AIM" not "Click and drag backward on the catapult to set your launch angle and power"
 7. **Visuals Teach** — Each zombie type is visually distinct so players can identify threats at a glance. Engineers wear hard hats. Brutes are huge. Sprinters lean forward
 
+### Level 1-1: The Tutorial (Step-by-Step)
+
+Modeled directly on PvZ Level 1's approach: single lane, one tool, short terse prompts that guide without interrupting. The game world is simplified — only ONE bridge, ONE path, a handful of slow zombies. The entire playfield is stripped down so nothing distracts from the core mechanic being taught.
+
+**Map Setup**: Minimal mountain with just one bridge connecting spawn to the castle. Only boulders available. Only Shamblers (slowest, weakest zombie).
+
+```
+Step 1: "Tap on a boulder to pick it up!"
+────────────────────────────────────────────
+- Boulder ammo icon PULSES with orange glow at bottom of screen
+- Arrow points to it
+- Nothing else happens until player taps/clicks the boulder icon
+- On tap: boulder icon highlights, cursor changes to show boulder selected
+- Prompt disappears immediately
+
+Step 2: "Drag back from the catapult to aim!"
+────────────────────────────────────────────
+- Catapult on castle wall PULSES with orange glow
+- Arrow points to it
+- Player drags backward — trajectory preview arc appears in real-time
+- Text disappears as soon as player starts dragging
+- If player releases too early (weak shot), gentle prompt:
+  "Pull back further for more power!"
+
+Step 3: (no text — player releases, boulder flies)
+────────────────────────────────────────────
+- Boulder arcs through the air — camera FOLLOWS the projectile
+- Impact on bridge — SATISFYING destruction: planks splinter, dust puffs
+- Bridge collapses with physics debris
+- Brief slow-motion on first-ever bridge destruction (0.5s)
+- This is the "aha!" moment — pure visual reward, zero text
+
+Step 4: "Nicely done! The bridge is destroyed!"
+────────────────────────────────────────────
+- Positive reinforcement (like PvZ's "Nicely done!")
+- Text appears briefly (2 seconds), then fades
+- Score pops up: "+200 BRIDGE DESTROYED"
+
+Step 5: (Zombies spawn — no prompt needed)
+────────────────────────────────────────────
+- 3 Shamblers appear at the bottom, march upward
+- They reach the gap where the bridge was — and FALL IN
+- Comedic falling scream, splat sound
+- "+100 +100 +100" score popups
+- Player learns: destroy bridge → zombies fall. Core loop understood.
+
+Step 6: "Keep firing! More are coming!"
+────────────────────────────────────────────
+- Second small wave: 3 more Shamblers on same path
+- Bridge has NOT regenerated — zombies fall in automatically
+- Player gets free kills, feels powerful
+- If a second bridge exists (later path), prompt:
+  "Tap on the falling debris to collect bonus points!" (optional)
+
+Step 7: Wave Complete — Level Clear
+────────────────────────────────────────────
+- Fanfare sound
+- "WAVE COMPLETE" banner
+- Star rating appears (guaranteed 3 stars on tutorial)
+- "Level 1-1 Clear!" with score summary
+- Button: "NEXT LEVEL →"
+```
+
+**Key tutorial UX rules** (matching PvZ):
+- **One prompt at a time** — never stack multiple instructions
+- **Prompts are reactive** — appear only when the player needs to do something, disappear the instant they start doing it
+- **Positive reinforcement** — "Nicely done!" after first successful action
+- **Let results speak** — the bridge exploding and zombies falling teaches more than any text ever could
+- **If player already knows**: Adaptive check — if player fires without prompts, skip all tutorial text. "Just get the player to do it once"
+- **Fail-safe**: If player does nothing for 15 seconds, re-show the current prompt with a subtle pulse
+
 ### Level-by-Level Mechanic Introduction
 
 Each level introduces **exactly one new concept**. The player masters it before the next is added.
