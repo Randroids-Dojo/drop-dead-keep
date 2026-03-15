@@ -1,5 +1,8 @@
 // Drop Dead Keep — Boulder & Ammo Physics
 
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSprite, setupPixelCanvas } from '../sprites/sprite-renderer.js';
+
 const { Bodies, Body } = Matter;
 
 export const AmmoType = {
@@ -14,6 +17,13 @@ const AMMO_STATS = {
   fireball: { damage: 25, radius: 10, color: '#e67e22', splashRadius: 50, reloadTime: 2.5, accuracy: 0.9 },
   ice_bomb: { damage: 15, radius: 10, color: '#5dade2', splashRadius: 40, reloadTime: 3.0, accuracy: 1.2 },
   mega_bomb: { damage: 80, radius: 16, color: '#f1c40f', splashRadius: 80, reloadTime: 4.0, accuracy: 0.7 },
+};
+
+const AMMO_SPRITE_MAP = {
+  boulder: 'boulder',
+  fireball: 'fireball',
+  ice_bomb: 'icebomb',
+  mega_bomb: 'megabomb',
 };
 
 export class Projectile {
@@ -104,32 +114,23 @@ export class Projectile {
     if (!this.alive) return;
 
     if (!this.impacted) {
-      // Draw trail
+      // Draw trail as tiny 2x2 pixel squares
       for (let i = 0; i < this.trail.length; i++) {
         const t = this.trail[i];
         const alpha = (1 - t.age / 0.5) * 0.3;
         if (alpha <= 0) continue;
-        ctx.beginPath();
-        ctx.arc(t.x, t.y, 3 * this.currentScale, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(200, 200, 200, ${alpha})`;
-        ctx.fill();
+        const size = Math.round(2 * this.currentScale);
+        ctx.fillRect(Math.round(t.x) - 1, Math.round(t.y) - 1, size, size);
       }
 
-      // Draw projectile
-      const r = this.stats.radius * this.currentScale;
-      ctx.beginPath();
-      ctx.arc(this.currentX, this.currentY, r, 0, Math.PI * 2);
-      ctx.fillStyle = this.stats.color;
-      ctx.fill();
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 2 * this.currentScale;
-      ctx.stroke();
-
-      // Highlight
-      ctx.beginPath();
-      ctx.arc(this.currentX - r * 0.3, this.currentY - r * 0.3, r * 0.3, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
-      ctx.fill();
+      // Draw projectile sprite
+      const sprites = getSprites();
+      const spriteKey = AMMO_SPRITE_MAP[this.ammoType];
+      const sprite = sprites.projectile[spriteKey];
+      const spriteH = sprite.height;
+      const drawScale = this.currentScale * 2;
+      drawSprite(ctx, sprite, this.currentX, this.currentY + spriteH * drawScale / 2, drawScale);
     } else {
       // Draw impact effect
       this.drawImpact(ctx);
@@ -138,41 +139,37 @@ export class Projectile {
 
   drawImpact(ctx) {
     const t = this.impactTime;
-    const x = this.actualTargetX;
-    const y = this.actualTargetY;
+    const x = Math.round(this.actualTargetX);
+    const y = Math.round(this.actualTargetY);
 
-    // Expanding ring
-    const ringRadius = this.stats.splashRadius * Math.min(t * 3, 1);
+    // Expanding pixel square ring (4 sides)
+    const ringSize = Math.round(this.stats.splashRadius * Math.min(t * 3, 1));
     const alpha = Math.max(0, 1 - t * 1.5);
 
-    ctx.beginPath();
-    ctx.arc(x, y, ringRadius, 0, Math.PI * 2);
     ctx.strokeStyle = `rgba(255, 200, 100, ${alpha})`;
     ctx.lineWidth = 3;
-    ctx.stroke();
+    ctx.strokeRect(x - ringSize, y - ringSize, ringSize * 2, ringSize * 2);
 
-    // Dust particles
+    // Dust particles as small pixel squares
     if (t < 0.8) {
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2 + t * 2;
-        const dist = ringRadius * 0.7 * (1 + Math.sin(i * 3) * 0.3);
-        const px = x + Math.cos(angle) * dist;
-        const py = y + Math.sin(angle) * dist;
+        const dist = ringSize * 0.7 * (1 + Math.sin(i * 3) * 0.3);
+        const px = Math.round(x + Math.cos(angle) * dist);
+        const py = Math.round(y + Math.sin(angle) * dist);
         const pAlpha = alpha * 0.6;
-        const pSize = (4 + Math.sin(i * 7) * 2) * (1 - t);
-        ctx.beginPath();
-        ctx.arc(px, py, pSize, 0, Math.PI * 2);
+        const pSize = Math.round((4 + Math.sin(i * 7) * 2) * (1 - t));
+        const drawSize = pSize > 2 ? 3 : 2;
         ctx.fillStyle = `rgba(180, 160, 120, ${pAlpha})`;
-        ctx.fill();
+        ctx.fillRect(px - Math.floor(drawSize / 2), py - Math.floor(drawSize / 2), drawSize, drawSize);
       }
     }
 
-    // Flash on first frame
+    // Flash on first frame as white pixel square
     if (t < 0.1) {
-      ctx.beginPath();
-      ctx.arc(x, y, 20 * this.scale, 0, Math.PI * 2);
+      const flashSize = Math.round(20 * this.scale);
       ctx.fillStyle = `rgba(255, 255, 200, ${0.8 - t * 8})`;
-      ctx.fill();
+      ctx.fillRect(x - flashSize, y - flashSize, flashSize * 2, flashSize * 2);
     }
   }
 }

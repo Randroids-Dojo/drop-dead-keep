@@ -1,5 +1,9 @@
 // Drop Dead Keep — Title, Pause, Game-Over, Level-Select, Level-Complete Screens
 
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSpriteAt, setupPixelCanvas } from '../sprites/sprite-renderer.js';
+import { drawPixelText, measurePixelText, drawPixelBox, drawPixelButton } from '../sprites/pixel-font.js';
+
 export class MenuSystem {
   constructor() {
     this.buttons = [];
@@ -42,106 +46,120 @@ export class MenuSystem {
   }
 
   drawTitleScreen(ctx, w, h) {
-    // Background
-    ctx.fillStyle = '#1a1a2e';
-    ctx.fillRect(0, 0, w, h);
+    const sprites = getSprites();
+    setupPixelCanvas(ctx);
 
-    // Stars
+    // Background — solid color bands for sky
+    ctx.fillStyle = '#0a0a1e';
+    ctx.fillRect(0, 0, w, Math.round(h * 0.3));
+    ctx.fillStyle = '#12122a';
+    ctx.fillRect(0, Math.round(h * 0.3), w, Math.round(h * 0.3));
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, Math.round(h * 0.6), w, h - Math.round(h * 0.6));
+
+    // Stars — 2x2 pixel dots with twinkling alpha
     for (let i = 0; i < 80; i++) {
-      const x = (Math.sin(i * 127.1) * 0.5 + 0.5) * w;
-      const y = (Math.cos(i * 311.7) * 0.5 + 0.5) * h * 0.6;
+      const sx = Math.round((Math.sin(i * 127.1) * 0.5 + 0.5) * w);
+      const sy = Math.round((Math.cos(i * 311.7) * 0.5 + 0.5) * h * 0.6);
       const twinkle = Math.sin(Date.now() * 0.002 + i * 3) * 0.5 + 0.5;
-      ctx.fillStyle = `rgba(255, 255, 220, ${0.2 + twinkle * 0.6})`;
-      ctx.fillRect(x, y, 1.5, 1.5);
+      ctx.save();
+      ctx.globalAlpha = 0.2 + twinkle * 0.6;
+      ctx.fillStyle = '#ffffdc';
+      ctx.fillRect(sx, sy, 2, 2);
+      ctx.restore();
     }
 
-    // Moon
-    ctx.fillStyle = 'rgba(255, 255, 230, 0.9)';
-    ctx.beginPath();
-    ctx.arc(w - 100, 80, 30, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1a1a2e';
-    ctx.beginPath();
-    ctx.arc(w - 88, 73, 27, 0, Math.PI * 2);
-    ctx.fill();
+    // Moon — sprite at scale 3
+    if (sprites.env.moon) {
+      drawSpriteAt(ctx, sprites.env.moon, Math.round(w - 130), 40, 3);
+    }
 
-    // Castle silhouette at bottom
+    // Castle silhouette — pixel-perfect rectangles
+    const castleY = Math.round(h - 120);
     ctx.fillStyle = '#111122';
-    const castleY = h - 120;
     // Wall
-    ctx.fillRect(w / 2 - 150, castleY, 300, 120);
+    ctx.fillRect(Math.round(w / 2 - 150), castleY, 300, 120);
     // Towers
-    ctx.fillRect(w / 2 - 170, castleY - 40, 50, 160);
-    ctx.fillRect(w / 2 + 120, castleY - 40, 50, 160);
+    ctx.fillRect(Math.round(w / 2 - 170), Math.round(castleY - 40), 50, 160);
+    ctx.fillRect(Math.round(w / 2 + 120), Math.round(castleY - 40), 50, 160);
     // Crenellations
     for (let i = 0; i < 8; i++) {
-      ctx.fillRect(w / 2 - 150 + i * 40, castleY - 15, 20, 15);
+      ctx.fillRect(Math.round(w / 2 - 150 + i * 40), Math.round(castleY - 15), 20, 15);
     }
     // Tower crenellations
     for (let i = 0; i < 2; i++) {
-      ctx.fillRect(w / 2 - 170 + i * 25, castleY - 55, 15, 15);
-      ctx.fillRect(w / 2 + 120 + i * 25, castleY - 55, 15, 15);
+      ctx.fillRect(Math.round(w / 2 - 170 + i * 25), Math.round(castleY - 55), 15, 15);
+      ctx.fillRect(Math.round(w / 2 + 120 + i * 25), Math.round(castleY - 55), 15, 15);
     }
 
-    // Torch glow on towers
-    for (const tx of [w / 2 - 145, w / 2 + 145]) {
-      const glow = ctx.createRadialGradient(tx, castleY - 20, 0, tx, castleY - 20, 40);
-      glow.addColorStop(0, 'rgba(230, 126, 34, 0.3)');
-      glow.addColorStop(1, 'rgba(230, 126, 34, 0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(tx - 40, castleY - 60, 80, 80);
-      // Flame
-      const flicker = Math.sin(Date.now() * 0.01 + tx) * 2;
-      ctx.fillStyle = '#e67e22';
-      ctx.beginPath();
-      ctx.ellipse(tx, castleY - 25 + flicker, 4, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
+    // Torches on towers — sprite-based
+    if (sprites.castle.torch) {
+      const torchFrame = Math.floor(Date.now() / 300) % sprites.castle.torch.length;
+      const torchSprite = sprites.castle.torch[torchFrame];
+      drawSpriteAt(ctx, torchSprite, Math.round(w / 2 - 155), Math.round(castleY - 35), 2);
+      drawSpriteAt(ctx, torchSprite, Math.round(w / 2 + 135), Math.round(castleY - 35), 2);
     }
 
     // Title
-    const titleY = h * 0.3;
-    ctx.fillStyle = '#e67e22';
-    ctx.font = 'bold 52px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('DROP DEAD KEEP', w / 2, titleY);
-
-    // Title shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.fillText('DROP DEAD KEEP', w / 2 + 3, titleY + 3);
+    const titleY = Math.round(h * 0.3);
+    drawPixelText(ctx, 'DROP DEAD KEEP', w / 2, titleY, {
+      color: '#e67e22',
+      size: 6,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
     // Tagline
-    ctx.fillStyle = '#bdc3c7';
-    ctx.font = '15px monospace';
-    ctx.fillText('Fling boulders. Shatter bridges. Send the undead tumbling.', w / 2, titleY + 40);
+    drawPixelText(ctx, 'FLING BOULDERS. SHATTER BRIDGES. SEND THE UNDEAD TUMBLING.', w / 2, titleY + 50, {
+      color: '#bdc3c7',
+      size: 1,
+      align: 'center',
+    });
 
     // Play button
     this.clearButtons();
     const btnW = 200;
     const btnH = 50;
-    const btnX = w / 2 - btnW / 2;
-    const btnY = h * 0.55;
+    const btnX = Math.round(w / 2 - btnW / 2);
+    const btnY = Math.round(h * 0.55);
     this.addButton('play', 'PLAY', btnX, btnY, btnW, btnH);
-    this.drawButton(ctx, this.buttons[0]);
+    drawPixelButton(ctx, btnX, btnY, btnW, btnH, 'PLAY', {
+      bg: '#e67e22',
+      hoverBg: '#d35400',
+      hover: this.hoveredButton === 'play',
+      textSize: 3,
+    });
 
     // Version
-    ctx.fillStyle = '#444';
-    ctx.font = '10px monospace';
-    ctx.fillText('v1.0 MVP', w / 2, h - 15);
+    drawPixelText(ctx, 'V1.0 MVP', w / 2, h - 15, {
+      color: '#444444',
+      size: 1,
+      align: 'center',
+    });
   }
 
   drawLevelSelect(ctx, w, h, progress) {
+    const sprites = getSprites();
+    setupPixelCanvas(ctx);
+
+    // Background
     ctx.fillStyle = '#1a1a2e';
     ctx.fillRect(0, 0, w, h);
 
     // Title
-    ctx.fillStyle = '#e67e22';
-    ctx.font = 'bold 28px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('THE FOOTHILLS', w / 2, 50);
+    drawPixelText(ctx, 'THE FOOTHILLS', w / 2, 30, {
+      color: '#e67e22',
+      size: 4,
+      align: 'center',
+    });
 
-    ctx.fillStyle = '#666';
-    ctx.font = '14px monospace';
-    ctx.fillText('World 1', w / 2, 72);
+    // Subtitle
+    drawPixelText(ctx, 'WORLD 1', w / 2, 68, {
+      color: '#666666',
+      size: 1,
+      align: 'center',
+    });
 
     this.clearButtons();
 
@@ -150,47 +168,47 @@ export class MenuSystem {
     const btnSize = 80;
     const spacing = 20;
     const totalW = levels * btnSize + (levels - 1) * spacing;
-    const startX = w / 2 - totalW / 2;
-    const btnY = h * 0.35;
+    const startX = Math.round(w / 2 - totalW / 2);
+    const btnY = Math.round(h * 0.35);
 
     for (let i = 0; i < levels; i++) {
       const levelId = `1-${i + 1}`;
-      const lx = startX + i * (btnSize + spacing);
+      const lx = Math.round(startX + i * (btnSize + spacing));
       const completed = progress.levelsCompleted[levelId];
       const stars = progress.stars[levelId] || 0;
       const unlocked = i === 0 || progress.levelsCompleted[`1-${i}`];
 
-      // Button background
-      ctx.fillStyle = unlocked ? (completed ? '#2d3a2e' : '#2d2d3a') : '#1a1a1a';
-      ctx.fillRect(lx, btnY, btnSize, btnSize);
-
-      // Border
-      ctx.strokeStyle = unlocked ? '#e67e22' : '#333';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(lx, btnY, btnSize, btnSize);
+      // Button box
+      const boxBg = unlocked ? (completed ? '#2d3a2e' : '#2d2d3a') : '#1a1a1a';
+      const boxBorder = unlocked ? '#e67e22' : '#333333';
+      drawPixelBox(ctx, lx, btnY, btnSize, btnSize, {
+        bg: boxBg,
+        border: boxBorder,
+        borderWidth: 2,
+      });
 
       // Level number
-      ctx.fillStyle = unlocked ? '#fff' : '#444';
-      ctx.font = 'bold 20px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(levelId, lx + btnSize / 2, btnY + 35);
+      drawPixelText(ctx, levelId, lx + btnSize / 2, btnY + 20, {
+        color: unlocked ? '#ffffff' : '#444444',
+        size: 2,
+        align: 'center',
+      });
 
-      // Stars
-      if (completed) {
-        ctx.font = '14px monospace';
-        let starStr = '';
+      // Stars (using sprites)
+      if (completed && sprites.ui.starFilled && sprites.ui.starEmpty) {
         for (let s = 0; s < 3; s++) {
-          starStr += s < stars ? '\u2605' : '\u2606';
+          const starSprite = s < stars ? sprites.ui.starFilled : sprites.ui.starEmpty;
+          const starX = Math.round(lx + btnSize / 2 - 24 + s * 16);
+          const starY = Math.round(btnY + 50);
+          drawSpriteAt(ctx, starSprite, starX, starY, 2);
         }
-        ctx.fillStyle = '#f1c40f';
-        ctx.fillText(starStr, lx + btnSize / 2, btnY + 55);
       }
 
-      // Lock icon
-      if (!unlocked) {
-        ctx.fillStyle = '#555';
-        ctx.font = '24px monospace';
-        ctx.fillText('\u{1F512}', lx + btnSize / 2, btnY + 55);
+      // Lock icon (using sprite)
+      if (!unlocked && sprites.ui.lock) {
+        const lockX = Math.round(lx + btnSize / 2 - sprites.ui.lock.width);
+        const lockY = Math.round(btnY + 48);
+        drawSpriteAt(ctx, sprites.ui.lock, lockX, lockY, 2);
       }
 
       if (unlocked) {
@@ -201,8 +219,15 @@ export class MenuSystem {
     // Back button
     const backW = 100;
     const backH = 36;
-    this.addButton('back', 'BACK', 20, h - 60, backW, backH, 'secondary');
-    this.drawButton(ctx, this.buttons[this.buttons.length - 1]);
+    const backX = 20;
+    const backY = Math.round(h - 60);
+    this.addButton('back', 'BACK', backX, backY, backW, backH, 'secondary');
+    drawPixelButton(ctx, backX, backY, backW, backH, 'BACK', {
+      bg: '#333333',
+      hoverBg: '#444444',
+      hover: this.hoveredButton === 'back',
+      textSize: 2,
+    });
   }
 
   drawGameOver(ctx, w, h, waveSystem, scoringSystem) {
@@ -210,110 +235,172 @@ export class MenuSystem {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, w, h);
 
-    // Red radial burst
-    const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, 300);
-    grad.addColorStop(0, 'rgba(192, 57, 43, 0.3)');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = grad;
+    // Solid dark red overlay (replaces gradient)
+    ctx.fillStyle = 'rgba(120, 30, 20, 0.25)';
     ctx.fillRect(0, 0, w, h);
 
     // Title
-    ctx.fillStyle = '#e74c3c';
-    ctx.font = 'bold 36px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('THE GATE HAS FALLEN', w / 2, h * 0.3);
+    drawPixelText(ctx, 'THE GATE HAS FALLEN', w / 2, Math.round(h * 0.3), {
+      color: '#e74c3c',
+      size: 4,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
     // Stats
-    ctx.fillStyle = '#bdc3c7';
-    ctx.font = '14px monospace';
-    const waveInfo = `Wave ${waveSystem.getCurrentWaveNumber()} of ${waveSystem.getTotalWaves()}`;
-    ctx.fillText(waveInfo, w / 2, h * 0.4);
-    ctx.fillText(`${waveSystem.zombiesKilled} zombies stopped`, w / 2, h * 0.44);
-    ctx.fillText(`Score: ${scoringSystem.score}`, w / 2, h * 0.48);
+    const waveInfo = `WAVE ${waveSystem.getCurrentWaveNumber()} OF ${waveSystem.getTotalWaves()}`;
+    drawPixelText(ctx, waveInfo, w / 2, Math.round(h * 0.4), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
+    drawPixelText(ctx, `${waveSystem.zombiesKilled} ZOMBIES STOPPED`, w / 2, Math.round(h * 0.44), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
+    drawPixelText(ctx, `SCORE: ${scoringSystem.score}`, w / 2, Math.round(h * 0.48), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
 
     // Buttons
     this.clearButtons();
     const btnW = 160;
     const btnH = 44;
-    this.addButton('retry', 'RETRY', w / 2 - btnW / 2, h * 0.58, btnW, btnH);
-    this.addButton('levels', 'LEVEL SELECT', w / 2 - btnW / 2, h * 0.66, btnW, btnH, 'secondary');
-    for (const btn of this.buttons) this.drawButton(ctx, btn);
+    const retryX = Math.round(w / 2 - btnW / 2);
+    const retryY = Math.round(h * 0.58);
+    this.addButton('retry', 'RETRY', retryX, retryY, btnW, btnH);
+    drawPixelButton(ctx, retryX, retryY, btnW, btnH, 'RETRY', {
+      bg: '#e67e22',
+      hoverBg: '#d35400',
+      hover: this.hoveredButton === 'retry',
+      textSize: 2,
+    });
+
+    const levelsX = Math.round(w / 2 - btnW / 2);
+    const levelsY = Math.round(h * 0.66);
+    this.addButton('levels', 'LEVEL SELECT', levelsX, levelsY, btnW, btnH, 'secondary');
+    drawPixelButton(ctx, levelsX, levelsY, btnW, btnH, 'LEVEL SELECT', {
+      bg: '#333333',
+      hoverBg: '#444444',
+      hover: this.hoveredButton === 'levels',
+      textSize: 2,
+    });
   }
 
   drawLevelComplete(ctx, w, h, data) {
+    const sprites = getSprites();
+    setupPixelCanvas(ctx);
+
     // Dark overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     ctx.fillRect(0, 0, w, h);
 
-    // Title
-    ctx.fillStyle = '#2ecc71';
-    ctx.font = 'bold 36px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('LEVEL COMPLETE!', w / 2, h * 0.22);
+    // Solid dark green overlay
+    ctx.fillStyle = 'rgba(20, 80, 40, 0.2)';
+    ctx.fillRect(0, 0, w, h);
 
-    // Stars
-    ctx.font = '40px monospace';
-    const starY = h * 0.32;
-    for (let i = 0; i < 3; i++) {
-      const filled = i < data.stars;
-      ctx.fillStyle = filled ? '#f1c40f' : '#444';
-      ctx.fillText(filled ? '\u2605' : '\u2606', w / 2 - 50 + i * 50, starY);
+    // Title
+    drawPixelText(ctx, 'LEVEL COMPLETE!', w / 2, Math.round(h * 0.22), {
+      color: '#2ecc71',
+      size: 4,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
+
+    // Stars (using sprites at scale 3)
+    const starY = Math.round(h * 0.32);
+    if (sprites.ui.starFilled && sprites.ui.starEmpty) {
+      for (let i = 0; i < 3; i++) {
+        const filled = i < data.stars;
+        const starSprite = filled ? sprites.ui.starFilled : sprites.ui.starEmpty;
+        const starX = Math.round(w / 2 - 50 + i * 50 - starSprite.width * 1.5);
+        drawSpriteAt(ctx, starSprite, starX, starY, 3);
+      }
     }
 
     // Stats
-    ctx.fillStyle = '#bdc3c7';
-    ctx.font = '14px monospace';
-    ctx.fillText(`Score: ${data.score}`, w / 2, h * 0.42);
-    ctx.fillText(`Zombies Killed: ${data.kills}`, w / 2, h * 0.46);
-    ctx.fillText(`Gate Breaches: ${data.breaches}`, w / 2, h * 0.50);
+    drawPixelText(ctx, `SCORE: ${data.score}`, w / 2, Math.round(h * 0.42), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
+    drawPixelText(ctx, `ZOMBIES KILLED: ${data.kills}`, w / 2, Math.round(h * 0.46), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
+    drawPixelText(ctx, `GATE BREACHES: ${data.breaches}`, w / 2, Math.round(h * 0.50), {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
 
     // Buttons
     this.clearButtons();
     const btnW = 160;
     const btnH = 44;
-    this.addButton('next_level', 'NEXT LEVEL', w / 2 - btnW / 2, h * 0.60, btnW, btnH);
-    this.addButton('levels', 'LEVEL SELECT', w / 2 - btnW / 2, h * 0.68, btnW, btnH, 'secondary');
-    for (const btn of this.buttons) this.drawButton(ctx, btn);
-  }
+    const nextX = Math.round(w / 2 - btnW / 2);
+    const nextY = Math.round(h * 0.60);
+    this.addButton('next_level', 'NEXT LEVEL', nextX, nextY, btnW, btnH);
+    drawPixelButton(ctx, nextX, nextY, btnW, btnH, 'NEXT LEVEL', {
+      bg: '#2ecc71',
+      hoverBg: '#27ae60',
+      hover: this.hoveredButton === 'next_level',
+      textSize: 2,
+    });
 
-  drawButton(ctx, btn) {
-    const hovered = this.hoveredButton === btn.id;
-    const isPrimary = btn.style !== 'secondary';
-
-    // Background
-    if (isPrimary) {
-      ctx.fillStyle = hovered ? '#d35400' : '#e67e22';
-    } else {
-      ctx.fillStyle = hovered ? '#444' : '#333';
-    }
-    ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
-
-    // Border
-    ctx.strokeStyle = isPrimary ? '#f39c12' : '#555';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
-
-    // Text
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 16px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 6);
+    const levelsX = Math.round(w / 2 - btnW / 2);
+    const levelsY = Math.round(h * 0.68);
+    this.addButton('levels', 'LEVEL SELECT', levelsX, levelsY, btnW, btnH, 'secondary');
+    drawPixelButton(ctx, levelsX, levelsY, btnW, btnH, 'LEVEL SELECT', {
+      bg: '#333333',
+      hoverBg: '#444444',
+      hover: this.hoveredButton === 'levels',
+      textSize: 2,
+    });
   }
 
   drawPauseOverlay(ctx, w, h) {
+    // Dark overlay
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
     ctx.fillRect(0, 0, w, h);
 
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 32px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('PAUSED', w / 2, h * 0.35);
+    // "PAUSED" text
+    drawPixelText(ctx, 'PAUSED', w / 2, Math.round(h * 0.35), {
+      color: '#ffffff',
+      size: 5,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
+    // Buttons
     this.clearButtons();
     const btnW = 160;
     const btnH = 44;
-    this.addButton('resume', 'RESUME', w / 2 - btnW / 2, h * 0.45, btnW, btnH);
-    this.addButton('levels', 'LEVEL SELECT', w / 2 - btnW / 2, h * 0.53, btnW, btnH, 'secondary');
-    for (const btn of this.buttons) this.drawButton(ctx, btn);
+    const resumeX = Math.round(w / 2 - btnW / 2);
+    const resumeY = Math.round(h * 0.45);
+    this.addButton('resume', 'RESUME', resumeX, resumeY, btnW, btnH);
+    drawPixelButton(ctx, resumeX, resumeY, btnW, btnH, 'RESUME', {
+      bg: '#e67e22',
+      hoverBg: '#d35400',
+      hover: this.hoveredButton === 'resume',
+      textSize: 2,
+    });
+
+    const levelsX = Math.round(w / 2 - btnW / 2);
+    const levelsY = Math.round(h * 0.53);
+    this.addButton('levels', 'LEVEL SELECT', levelsX, levelsY, btnW, btnH, 'secondary');
+    drawPixelButton(ctx, levelsX, levelsY, btnW, btnH, 'LEVEL SELECT', {
+      bg: '#333333',
+      hoverBg: '#444444',
+      hover: this.hoveredButton === 'levels',
+      textSize: 2,
+    });
   }
 }

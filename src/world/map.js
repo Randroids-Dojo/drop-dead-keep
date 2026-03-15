@@ -1,6 +1,8 @@
 // Drop Dead Keep — Mountain Path & Bridge Layout
 
 import { Bridge, BridgeType } from '../physics/bridge.js';
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSprite, drawSpriteAt, drawTiledSprite, setupPixelCanvas } from '../sprites/sprite-renderer.js';
 
 export class GameMap {
   constructor(physics, canvasWidth, canvasHeight) {
@@ -134,44 +136,40 @@ export class GameMap {
   }
 
   draw(ctx) {
-    // Sky gradient
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, this.height);
-    skyGrad.addColorStop(0, '#0a0a1a');
-    skyGrad.addColorStop(0.4, '#1a1a2e');
-    skyGrad.addColorStop(1, '#2d1b4e');
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, this.width, this.height);
+    setupPixelCanvas(ctx);
 
-    // Stars
+    const sprites = getSprites();
+
+    // Sky — solid color bands
+    const skyColors = ['#0a0a1a', '#0f0f24', '#14142e', '#1a1a2e', '#2d1b4e'];
+    const bandHeight = Math.ceil(this.height / skyColors.length);
+    for (let i = 0; i < skyColors.length; i++) {
+      ctx.fillStyle = skyColors[i];
+      ctx.fillRect(0, i * bandHeight, this.width, bandHeight);
+    }
+
+    // Stars — pixel sprites
     for (let i = 0; i < 60; i++) {
       const sx = (Math.sin(i * 127.1 + 33) * 0.5 + 0.5) * this.width;
       const sy = (Math.cos(i * 311.7 + 17) * 0.5 + 0.5) * this.height * 0.5;
       const brightness = 0.3 + (Math.sin(i * 73 + Date.now() * 0.001) * 0.5 + 0.5) * 0.7;
-      ctx.fillStyle = `rgba(255, 255, 220, ${brightness * 0.5})`;
-      ctx.fillRect(sx, sy, 1.5, 1.5);
+      drawSpriteAt(ctx, sprites.env.star, sx, sy, 1);
     }
 
-    // Moon
-    ctx.fillStyle = 'rgba(255, 255, 230, 0.9)';
-    ctx.beginPath();
-    ctx.arc(this.width - 80, 60, 25, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#0a0a1a';
-    ctx.beginPath();
-    ctx.arc(this.width - 70, 55, 22, 0, Math.PI * 2);
-    ctx.fill();
+    // Moon — pixel sprite
+    drawSpriteAt(ctx, sprites.env.moon, this.width - 110, 30, 3);
 
     // Terrain (cliff faces on sides)
-    this.drawTerrain(ctx);
+    this.drawTerrain(ctx, sprites);
 
     // Trees
-    this.drawTrees(ctx);
+    this.drawTrees(ctx, sprites);
 
     // Paths
-    this.drawPaths(ctx);
+    this.drawPaths(ctx, sprites);
 
     // Cliff chasms
-    this.drawCliffs(ctx);
+    this.drawCliffs(ctx, sprites);
 
     // Bridges
     for (const bridge of this.bridges) {
@@ -184,83 +182,56 @@ export class GameMap {
     }
 
     // Castle wall
-    this.drawCastle(ctx);
+    this.drawCastle(ctx, sprites);
   }
 
-  drawTerrain(ctx) {
-    // Ground/terrain gradient
-    const terrainGrad = ctx.createLinearGradient(0, 0, 0, this.height);
-    terrainGrad.addColorStop(0, 'rgba(40, 30, 20, 0.3)');
-    terrainGrad.addColorStop(0.5, 'rgba(50, 35, 25, 0.5)');
-    terrainGrad.addColorStop(1, 'rgba(60, 40, 30, 0.7)');
+  drawTerrain(ctx, sprites) {
+    // Left cliff strip — tiled with cliff sprites
+    const cliffWidth = 45;
+    drawTiledSprite(ctx, sprites.env.cliffTile, 0, 0, cliffWidth, this.height, 2);
 
-    // Left terrain edge
-    ctx.fillStyle = terrainGrad;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    for (let y = 0; y <= this.height; y += 20) {
-      const x = 30 + Math.sin(y * 0.02) * 15 + Math.sin(y * 0.05) * 8;
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(0, this.height);
-    ctx.closePath();
-    ctx.fill();
-
-    // Right terrain edge
-    ctx.beginPath();
-    ctx.moveTo(this.width, 0);
-    for (let y = 0; y <= this.height; y += 20) {
-      const x = this.width - 30 - Math.sin(y * 0.02 + 2) * 15 - Math.sin(y * 0.05 + 1) * 8;
-      ctx.lineTo(x, y);
-    }
-    ctx.lineTo(this.width, this.height);
-    ctx.closePath();
-    ctx.fill();
+    // Right cliff strip — tiled with cliff sprites
+    drawTiledSprite(ctx, sprites.env.cliffTile, this.width - cliffWidth, 0, cliffWidth, this.height, 2);
   }
 
-  drawPaths(ctx) {
+  drawPaths(ctx, sprites) {
     for (const p of this.paths) {
       // Path width scales with perspective
       const avgY = (p.y1 + p.y2) / 2;
       const scale = 0.4 + (avgY / this.height) * 0.6;
       const pathWidth = 20 * scale;
 
-      // Path background
-      ctx.strokeStyle = 'rgba(90, 65, 40, 0.6)';
-      ctx.lineWidth = pathWidth + 4;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(p.x1, p.y1);
-      ctx.lineTo(p.x2, p.y2);
-      ctx.stroke();
+      // Tile the path along the segment
+      const dx = p.x2 - p.x1;
+      const dy = p.y2 - p.y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      const tileSize = 8 * scale * 2; // pathTile is 8px, scaled
+      const steps = Math.max(1, Math.floor(len / tileSize));
 
-      // Path surface
-      ctx.strokeStyle = 'rgba(120, 90, 55, 0.5)';
-      ctx.lineWidth = pathWidth;
-      ctx.beginPath();
-      ctx.moveTo(p.x1, p.y1);
-      ctx.lineTo(p.x2, p.y2);
-      ctx.stroke();
-
-      // Grass tufts along edges
-      ctx.fillStyle = 'rgba(50, 80, 30, 0.4)';
-      const len = Math.sqrt((p.x2 - p.x1) ** 2 + (p.y2 - p.y1) ** 2);
-      const steps = Math.floor(len / 20);
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
-        const gx = p.x1 + (p.x2 - p.x1) * t;
-        const gy = p.y1 + (p.y2 - p.y1) * t;
-        const gs = 3 * scale;
-        ctx.fillRect(gx - pathWidth / 2 - gs, gy - gs / 2, gs, gs);
-        ctx.fillRect(gx + pathWidth / 2, gy - gs / 2, gs, gs);
+        const tx = p.x1 + dx * t;
+        const ty = p.y1 + dy * t;
+        drawTiledSprite(ctx, sprites.env.pathTile, tx - pathWidth / 2, ty - tileSize / 2, pathWidth, tileSize, scale);
+      }
+
+      // Grass sprites along edges
+      const grassSteps = Math.floor(len / 20);
+      for (let i = 0; i <= grassSteps; i++) {
+        const t = i / grassSteps;
+        const gx = p.x1 + dx * t;
+        const gy = p.y1 + dy * t;
+        const gs = scale;
+        drawSpriteAt(ctx, sprites.env.grassTile, gx - pathWidth / 2 - 8 * gs, gy - 4 * gs, gs);
+        drawSpriteAt(ctx, sprites.env.grassTile, gx + pathWidth / 2, gy - 4 * gs, gs);
       }
     }
   }
 
-  drawCliffs(ctx) {
+  drawCliffs(ctx, sprites) {
     for (const cliff of this.cliffs) {
-      // Dark chasm
-      ctx.fillStyle = 'rgba(10, 5, 20, 0.8)';
+      // Dark chasm fill
+      ctx.fillStyle = '#0a0514';
       ctx.fillRect(
         cliff.x - cliff.width / 2,
         cliff.y - cliff.height / 2,
@@ -268,120 +239,71 @@ export class GameMap {
         cliff.height
       );
 
-      // Chasm edges
-      ctx.strokeStyle = 'rgba(60, 40, 25, 0.6)';
-      ctx.lineWidth = 2 * cliff.scale;
-      ctx.strokeRect(
-        cliff.x - cliff.width / 2,
-        cliff.y - cliff.height / 2,
-        cliff.width,
-        cliff.height
-      );
+      // Cliff tile border along edges
+      const borderH = 4 * cliff.scale;
+      // Top border
+      drawTiledSprite(ctx, sprites.env.cliffTile,
+        cliff.x - cliff.width / 2, cliff.y - cliff.height / 2,
+        cliff.width, borderH, cliff.scale);
+      // Bottom border
+      drawTiledSprite(ctx, sprites.env.cliffTile,
+        cliff.x - cliff.width / 2, cliff.y + cliff.height / 2 - borderH,
+        cliff.width, borderH, cliff.scale);
     }
   }
 
-  drawTrees(ctx) {
+  drawTrees(ctx, sprites) {
     // Sort by Y for depth ordering
     const sorted = [...this.trees].sort((a, b) => a.y - b.y);
     for (const tree of sorted) {
       const s = tree.scale;
       if (tree.type === 'dead') {
-        // Dead tree
-        ctx.strokeStyle = `rgba(80, 60, 40, ${0.4 + s * 0.3})`;
-        ctx.lineWidth = 2 * s;
-        ctx.beginPath();
-        ctx.moveTo(tree.x, tree.y);
-        ctx.lineTo(tree.x, tree.y - 20 * s);
-        ctx.moveTo(tree.x, tree.y - 15 * s);
-        ctx.lineTo(tree.x - 8 * s, tree.y - 22 * s);
-        ctx.moveTo(tree.x, tree.y - 12 * s);
-        ctx.lineTo(tree.x + 6 * s, tree.y - 19 * s);
-        ctx.stroke();
+        // Alternate between two dead tree sprites
+        const treeSprite = (Math.floor(tree.x + tree.y) % 2 === 0)
+          ? sprites.env.deadTree1
+          : sprites.env.deadTree2;
+        drawSprite(ctx, treeSprite, tree.x, tree.y, s * 2);
       } else {
-        // Bush
-        ctx.fillStyle = `rgba(40, 70, 30, ${0.3 + s * 0.3})`;
-        ctx.beginPath();
-        ctx.arc(tree.x, tree.y, 6 * s, 0, Math.PI * 2);
-        ctx.fill();
+        // Bush sprite
+        drawSprite(ctx, sprites.env.bush, tree.x, tree.y, s * 2);
       }
     }
   }
 
-  drawCastle(ctx) {
+  drawCastle(ctx, sprites) {
     const cx = this.width / 2;
     const cy = this.castleY;
     const cw = this.castleWidth;
 
-    // Castle wall
-    const wallGrad = ctx.createLinearGradient(cx - cw / 2, cy - 30, cx - cw / 2, cy + 30);
-    wallGrad.addColorStop(0, '#8B7355');
-    wallGrad.addColorStop(1, '#6B5335');
-    ctx.fillStyle = wallGrad;
-    ctx.fillRect(cx - cw / 2, cy - 20, cw, 50);
+    // Castle wall — tiled with wall tile
+    const wallX = cx - cw / 2;
+    const wallY = cy - 20;
+    const wallH = 50;
+    drawTiledSprite(ctx, sprites.castle.wallTile, wallX, wallY, cw, wallH, 2);
 
-    // Crenellations (battlements)
-    ctx.fillStyle = '#7B6345';
-    const crenCount = 10;
-    const crenWidth = cw / crenCount;
-    for (let i = 0; i < crenCount; i += 2) {
-      ctx.fillRect(
-        cx - cw / 2 + i * crenWidth, cy - 32,
-        crenWidth, 14
-      );
+    // Merlons (battlements) along the top
+    const merlonW = sprites.castle.merlon.width * 2;
+    const merlonH = sprites.castle.merlon.height * 2;
+    const merlonCount = Math.floor(cw / (merlonW + 4));
+    const merlonSpacing = cw / merlonCount;
+    for (let i = 0; i < merlonCount; i++) {
+      const mx = wallX + i * merlonSpacing + (merlonSpacing - merlonW) / 2;
+      const my = wallY - merlonH;
+      drawSpriteAt(ctx, sprites.castle.merlon, mx, my, 2);
     }
 
-    // Wall outline
-    ctx.strokeStyle = '#4a3520';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(cx - cw / 2, cy - 20, cw, 50);
+    // Gate
+    const gateScale = 3;
+    const gateW = sprites.castle.gate.width * gateScale;
+    const gateH = sprites.castle.gate.height * gateScale;
+    drawSpriteAt(ctx, sprites.castle.gate, cx - gateW / 2, cy - 15, gateScale);
 
-    // Gate (iron portcullis)
-    const gateW = 40;
-    const gateH = 35;
-    ctx.fillStyle = '#333';
-    ctx.fillRect(cx - gateW / 2, cy - 15, gateW, gateH);
-    // Portcullis bars
-    ctx.strokeStyle = '#555';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 5; i++) {
-      const bx = cx - gateW / 2 + 4 + i * 8;
-      ctx.beginPath();
-      ctx.moveTo(bx, cy - 15);
-      ctx.lineTo(bx, cy - 15 + gateH);
-      ctx.stroke();
-    }
-    for (let i = 0; i < 4; i++) {
-      const by = cy - 15 + 4 + i * 8;
-      ctx.beginPath();
-      ctx.moveTo(cx - gateW / 2, by);
-      ctx.lineTo(cx + gateW / 2, by);
-      ctx.stroke();
-    }
-
-    // Torches
+    // Torches — animated with two frames
+    const frameIndex = Math.floor(Date.now() / 300) % 2;
+    const torchSprite = sprites.castle.torch[frameIndex];
     const torchPositions = [cx - cw / 2 + 20, cx + cw / 2 - 20, cx - 60, cx + 60];
     for (const tx of torchPositions) {
-      // Torch pole
-      ctx.strokeStyle = '#6B4226';
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.moveTo(tx, cy - 20);
-      ctx.lineTo(tx, cy - 35);
-      ctx.stroke();
-
-      // Flame
-      const flicker = Math.sin(Date.now() * 0.01 + tx) * 2;
-      ctx.fillStyle = '#e67e22';
-      ctx.beginPath();
-      ctx.ellipse(tx, cy - 38 + flicker, 4, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Glow
-      const glow = ctx.createRadialGradient(tx, cy - 35, 0, tx, cy - 35, 30);
-      glow.addColorStop(0, 'rgba(230, 126, 34, 0.15)');
-      glow.addColorStop(1, 'rgba(230, 126, 34, 0)');
-      ctx.fillStyle = glow;
-      ctx.fillRect(tx - 30, cy - 65, 60, 60);
+      drawSprite(ctx, torchSprite, tx, cy - 20, 2);
     }
   }
 }
