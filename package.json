@@ -1,0 +1,12 @@
+{
+  "name": "drop-dead-keep",
+  "version": "1.0.0",
+  "description": "Fling boulders to shatter bridges and send the undead tumbling into the abyss",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/kv": "^1.0.1"
+  }
+}
