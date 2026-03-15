@@ -48,35 +48,51 @@ A set number of zombies breach the gate (configurable per level, default: 5).
 
 ## The Mountain Map
 
-Each level takes place on a **side-view mountain** with the castle perched at the top. Zombie hordes spawn at the base and march upward along a winding path of switchbacks connected by bridges.
+The player views the battlefield from **atop the castle walls, looking downhill**. The castle is at the **bottom of the screen** (closest to the player). The winding mountain path stretches AWAY from the castle toward the **top of the screen** (farthest from the player). Zombies spawn at the top and march DOWN the screen toward the castle.
 
-### Map Structure
+**The Y-axis is the depth axis.** Objects near the top of the screen are far away and appear small. Objects near the bottom are close and appear large. This creates a natural sense of approaching danger — zombies grow larger as they get closer.
+
+### Map Structure (Top-Down Perspective)
 ```
-    🏰 CASTLE (top)
-    ═══════════
-        │
-   ╔═══╧═══════╗
-   ║  BRIDGE 5  ║  ← Closest to castle (last defense)
-   ╠════════════╣
-   ║  PATH      ║  ← Zombies walk left-to-right
-   ╠════════════╣
-   ║  BRIDGE 4  ║
-   ╠════════════╣
-   ║  PATH      ║  ← Zombies walk right-to-left (switchback)
-   ╠════════════╣
-   ║  BRIDGE 3  ║
-   ╠════════════╣
-   ║  PATH      ║
-   ╠════════════╣
-   ║  BRIDGE 2  ║
-   ╠════════════╣
-   ║  PATH      ║
-   ╠════════════╣
-   ║  BRIDGE 1  ║  ← First crossing from spawn
-   ╠════════════╣
-   ║  SPAWN     ║  ← Zombie entry point (bottom)
-   ╚════════════╝
+┌──────────────────────────────────────────────────┐
+│ TOP OF SCREEN = FAR AWAY (small scale ~40%)      │
+│                                                  │
+│  · · · · SPAWN · · · ·   ← Tiny zombies appear  │
+│         ╌╌╌╌╌╌╌                                  │
+│       ╱ path  ╲                                  │
+│  ···BRIDGE 1···           ← Far, hard to hit     │
+│       ╲ path  ╱                                  │
+│         ╌╌╌╌╌╌╌                                  │
+│       ╱ path  ╲                                  │
+│  · ·BRIDGE 2· ·           ← Mid-range            │
+│       ╲ path  ╱                                  │
+│         ╌╌╌╌╌╌╌                                  │
+│       ╱ path  ╲                                  │
+│   · BRIDGE 3 ·            ← Getting close        │
+│       ╲ path  ╱                                  │
+│         ╌╌╌╌╌╌╌                                  │
+│       ╱ path  ╲                                  │
+│    BRIDGE 4               ← Close, easy to hit   │
+│       ╲ path  ╱                                  │
+│         ╌╌╌╌╌╌╌                                  │
+│    BRIDGE 5               ← Last defense!        │
+│                                                  │
+│  ═══╦════════════════╦═══                        │
+│     ║   CASTLE WALL  ║     ← Player is HERE      │
+│     ║    [CATAPULT]  ║                            │
+│     ║  [🪨] [🔥] [❄] [💣]  ║                      │
+│  ═══╩════════════════╩═══                        │
+│ BOTTOM OF SCREEN = CLOSE (full scale 100%)       │
+└──────────────────────────────────────────────────┘
 ```
+
+**Perspective scaling:**
+- Bridges, zombies, paths, and terrain all scale based on Y-position
+- **Bottom (Y=100%)**: Full size, full detail, easy to see and hit
+- **Top (Y=0%)**: ~40% size, less detail, hard to target precisely
+- Paths narrow with distance (perspective foreshortening)
+- Switchback paths zigzag left-right as they ascend the screen
+- **Zombies grow larger** as they march down the screen — creates visceral "they're getting closer!" tension
 
 ### Bridge Types
 
@@ -94,13 +110,46 @@ Each bridge is composed of **physics bodies** — planks, beams, stones, chains 
 
 ## The Catapult / Slingshot (Player Weapon)
 
-A catapult sits on the castle battlements. The player uses a **slingshot/drag-back mechanic** identical to Angry Birds — drag back from the catapult to aim, a dotted trajectory arc shows exactly where the shot will land, release to fire. The entire aiming system is one continuous gesture: touch, drag, release.
+The player views the battlefield from **atop the castle walls, looking downhill**. The catapult sits at the bottom of the screen (on the castle battlements). The winding mountain path stretches away from the player toward the top of the screen. **The Y-axis is the depth axis** — the closer to the top of the screen, the farther away from the castle, and the smaller zombies and bridges appear.
+
+The player uses a **slingshot/drag-back mechanic** inspired by Angry Birds but adapted for top-down perspective — drag back from the catapult to aim, a targeting reticle shows where the shot will land, release to fire.
+
+### Perspective & Depth
+
+```
+┌──────────────────────────────────────────────┐
+│  FAR AWAY (top of screen)                    │
+│  · · · tiny zombies · · · tiny bridge · · ·  │  ← Hardest to hit
+│                                              │     (most spread)
+│     · · zombies · · bridge · ·               │
+│                                              │
+│       · zombies · · bridge ·                 │  ← Mid-range
+│                                              │
+│         ZOMBIES    BRIDGE                    │  ← Close range
+│                                              │     (easiest)
+│  ┌──────────────────────────────────────┐    │
+│  │  ═══╦═══   CASTLE WALL   ═══╦═══    │    │
+│  │     ║ 🔥                 🔥 ║       │    │
+│  │     ╚══════╦══════╦══════╝         │    │
+│  │            ║CATPLT║                 │    │
+│  │            ╚══════╝                 │    │
+│  │   [🪨12] [🔥5] [❄3] [💣1]  AMMO   │    │
+│  └──────────────────────────────────────┘    │
+│  CLOSE (bottom of screen)                    │
+└──────────────────────────────────────────────┘
+```
+
+**Depth rules:**
+- **Scale**: Objects at the top of the screen render at ~40% size. Objects near the castle render at 100% size. Linear interpolation between
+- **Zombies get bigger** as they approach — creates mounting visual tension
+- **Bridges at different depths** have different apparent sizes — far bridges are small, close bridges fill more of the screen
+- **Perspective foreshortening** on the paths — switchback paths narrow as they recede
 
 ### Controls
 
 | Action | Keyboard | Mouse/Touch |
 |--------|----------|-------------|
-| Aim & Power | — | **Drag back from catapult** to set angle + force |
+| Aim & Power | — | **Drag back from catapult** (down toward bottom of screen) to aim up the mountain |
 | Fire | Space (confirm) | **Release drag** |
 | Quick-select Ammo | 1-4 keys | Tap ammo icons along bottom bar |
 | Camera Pan | Arrow keys / WASD | Two-finger drag |
@@ -108,50 +157,83 @@ A catapult sits on the castle battlements. The player uses a **slingshot/drag-ba
 
 ### Aiming System (Slingshot Mechanic)
 
-The aiming follows Angry Birds 2's slingshot exactly:
+The aiming uses the Angry Birds drag-back convention but adapted for our **top-down / looking-downhill** perspective. The player drags DOWN (toward the bottom of the screen) to aim UP (toward the top of the screen / farther away).
 
 ```
-                    · · ·
-              · ·         · ·
-          · ·                 · · ▸
-        ·                         ▸ ·
-      ·                               · ▸
-    ·                                     · ·
-   ·                                          ▸ IMPACT
-  ╱                                              POINT
- ╱  Catapult
-╱___arm
-║████║  ← Castle wall
+         · · · · ·                    ← Landing zone
+        ·    ⊕    ·                      (spread circle)
+         · · · · ·
+              │
+              │  Dotted trajectory
+              │  line (straight,
+              │  not arced — we're
+              │  looking from above)
+              │
+              │
+          ╔══════╗
+          ║CATPLT║  ← Drag starts here
+          ╚══════╝
+              ↕
+         [drag down to aim up]
 ```
 
 **Step-by-step interaction:**
 
-1. **Touch/click the catapult** — The catapult arm highlights, showing it's interactive. The ammo (boulder) appears loaded in the cup/sling
-2. **Drag BACKWARD (away from target)** — This is the key Angry Birds convention: you pull BACK to aim FORWARD. The drag direction is OPPOSITE to the launch direction. The further you drag back, the more power
-3. **Trajectory preview appears in real-time** — A dotted arc of small circles traces the predicted flight path. The dots are:
-   - **Evenly spaced circles** along the parabolic arc (like AB2's green dots)
-   - **Small arrowhead indicators** between dots showing flight direction
-   - Arc updates in real-time as the player adjusts their drag angle/distance
-   - Arc **fades out** at the far end (dots get smaller/more transparent) — provides guidance but maintains some skill-based uncertainty about exact landing
-4. **Release to fire** — Let go of the drag. The catapult arm snaps forward, launching the projectile along the previewed arc
-5. **Camera follows projectile** — On release, the camera smoothly tracks the boulder as it arcs through the air toward the target. Slight zoom-in on impact for dramatic effect
+1. **Touch/click the catapult** — The catapult highlights. The loaded ammo appears in the sling cup
+2. **Drag DOWNWARD (toward bottom of screen)** — This is the Angry Birds "pull back" convention mapped to our perspective: pulling DOWN aims the shot UPWARD (farther away from the castle, toward the mountain base). Dragging down-left or down-right adjusts the lateral aim (X-axis targeting)
+3. **Targeting reticle appears** — Instead of AB's parabolic arc (which doesn't make visual sense from above), we show:
+   - A **dotted line** from the catapult to the target point, showing the shot's path
+   - A **landing reticle** (circle/crosshair) at the predicted impact point
+   - The reticle **grows larger with distance** — representing decreasing accuracy at range (see Accuracy System below)
+   - The reticle updates in real-time as the player adjusts drag
+4. **Release to fire** — Catapult arm snaps forward. Boulder launches. Brief flight animation shows the projectile shrinking as it flies "away" from the camera (up the screen into the distance)
+5. **Impact** — Boulder lands within the reticle zone. Screen shake scales with distance (bigger shake for close hits, subtle rumble for far hits). Destruction physics play out
 
 **Aiming physics:**
-- **Drag distance** = launch power (short drag = weak lob, long drag = powerful shot)
-- **Drag angle** = launch angle (drag down-left for a high arc, drag straight-left for a flat shot)
-- **Parabolic arc** = realistic projectile motion with gravity. The trajectory preview calculates the same physics curve the actual projectile will follow
-- **Max power cap** — there's a maximum drag distance beyond which power doesn't increase (prevents overshooting off-screen)
-- **Snap-back cancel** — if the player drags back to the catapult origin (very short distance), releasing cancels the shot without firing. Prevents accidental misfires
+- **Drag distance (Y-axis)** = range / distance up the mountain. Short drag = close target (near the castle). Long drag = far target (near zombie spawn)
+- **Drag offset (X-axis)** = lateral aim. Drag down-left to aim right, drag down-right to aim left (inverted, like pulling a slingshot)
+- **Snap-back cancel** — if the player drags back to the catapult origin (very short distance), releasing cancels the shot without firing
+
+### Accuracy System (Distance = Spread)
+
+The farther the target, the less accurate the shot. This is the core skill mechanic that replaces Angry Birds' arc-trajectory skill.
+
+```
+CLOSE TARGET (bottom 1/3):     MID TARGET (middle 1/3):     FAR TARGET (top 1/3):
+     · ·                            · · · ·                     · · · · · · ·
+    · ⊕ ·                         ·   ⊕   ·                  ·      ⊕      ·
+     · ·                            · · · ·                     · · · · · · ·
+  Tight reticle               Medium reticle               Wide reticle
+  ~95% accuracy               ~75% accuracy                ~50% accuracy
+  Easy to hit bridge          Some randomness              Real risk of missing
+```
+
+**How accuracy works:**
+- The **landing reticle circle** represents the zone where the boulder might land
+- At close range, the circle is tiny — the boulder lands almost exactly where aimed
+- At far range, the circle is large — the boulder lands randomly within the zone
+- The actual impact point is randomized within the reticle, biased toward the center (gaussian distribution — most shots land near the crosshair, but some scatter to edges)
+- **Ammo types affect accuracy**: Boulders are standard. Ice Bombs have tighter spread (precision weapon). Mega Bombs have wide spread but it doesn't matter (huge blast radius)
+
+**Why this works for our game:**
+- **Close bridges are easy to destroy** — lets early levels feel satisfying
+- **Far bridges require multiple shots** — creates resource tension (do I spend 3 boulders on the far bridge or save them?)
+- **Engineers near the spawn are hard to snipe** — they're far away and small, so killing them requires skill or special ammo
+- **Zombies get easier to hit as they get closer** — creates natural tension curve: you WANT to stop them far away but it's HARDER to do so
+- **Rewards precision** — skilled players who learn to compensate for spread feel masterful
+- **Splash damage compensates** — Fireball and Mega Bomb have area effects that offset poor accuracy at range
 
 **Visual feedback during aim:**
-- Catapult arm bends/stretches as player drags (elastic visual)
-- Power meter fills along the catapult base (subtle bar, 0-100%)
-- Ammo glows brighter as power increases
-- At max power, the ammo pulses and a subtle screen vibration (mobile haptics) signals "full power"
+- Catapult arm bends as player drags (elastic visual)
+- Targeting line stretches from catapult to reticle
+- Reticle circle GROWS as target distance increases — player can see accuracy decreasing in real-time
+- Reticle color shifts: green (close/accurate) → yellow (mid) → red (far/inaccurate)
+- Ammo glows brighter as range increases
+- At max range, reticle pulses red — "you can try, but you'll probably miss"
 
 **Wind (harder difficulties):**
 - Small arrow + number appears at top of screen showing wind direction and strength
-- Trajectory preview accounts for wind — the arc curves accordingly
+- Wind shifts the reticle laterally — the landing zone drifts left or right
 - Player must compensate by aiming upwind
 - Wind changes between waves, not between shots (so player can plan)
 
@@ -160,6 +242,7 @@ The aiming follows Angry Birds 2's slingshot exactly:
 - Reload time varies by ammo type
 - During reload, player can pan the camera to survey damage
 - Next ammo auto-loads (same type) unless player switches
+- Boulder flight animation: projectile shrinks and darkens as it flies "away" into the distance, then IMPACT with dust/debris cloud at the landing point
 
 ### Ammo Types
 
