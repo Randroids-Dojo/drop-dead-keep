@@ -23,17 +23,40 @@ import { LEVELS } from './data/levels.js';
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 
+// Virtual game resolution — all game logic uses this coordinate space
+const GAME_SIZE = 800;
+let gameScale = 1;
+let gameOffsetX = 0;
+let gameOffsetY = 0;
+
 function resize() {
-  canvas.width = Math.min(window.innerWidth, 800);
-  canvas.height = Math.min(window.innerHeight, 800);
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  updateGameTransform();
 }
+
+function updateGameTransform() {
+  const sx = canvas.width / GAME_SIZE;
+  const sy = canvas.height / GAME_SIZE;
+  gameScale = Math.min(sx, sy);
+  gameOffsetX = (canvas.width - GAME_SIZE * gameScale) / 2;
+  gameOffsetY = (canvas.height - GAME_SIZE * gameScale) / 2;
+}
+
+function canvasToGame(cx, cy) {
+  return {
+    x: (cx - gameOffsetX) / gameScale,
+    y: (cy - gameOffsetY) / gameScale,
+  };
+}
+
 window.addEventListener('resize', resize);
 resize();
 
 // --- Systems ---
 const game = new Game(canvas, ctx);
 const physics = new PhysicsWorld();
-const camera = new Camera(canvas.width, canvas.height);
+const camera = new Camera(GAME_SIZE, GAME_SIZE);
 const waveSystem = new WaveSystem();
 const scoring = new ScoringSystem();
 const particles = new ParticleSystem();
@@ -73,10 +96,10 @@ function loadLevel(levelId) {
   physics.clear();
   physics.reset();
 
-  gameMap = new GameMap(physics, canvas.width, canvas.height);
+  gameMap = new GameMap(physics, GAME_SIZE, GAME_SIZE);
   gameMap.loadLevel(level);
 
-  catapult = new Catapult(canvas.width / 2, gameMap.castleY - 30);
+  catapult = new Catapult(GAME_SIZE / 2, gameMap.castleY - 30);
   catapult.setAmmoForLevel(level.ammo);
 
   projectiles = [];
@@ -158,7 +181,7 @@ function handleProjectileImpact(proj) {
   const stats = proj.stats;
 
   // Screen shake (bigger for close hits)
-  const yNorm = impact.y / canvas.height;
+  const yNorm = impact.y / GAME_SIZE;
   camera.shake(3 + yNorm * 5);
 
   // Play impact sound
@@ -226,7 +249,7 @@ function update(time) {
   const dt = game.dt;
   game.update(time);
   camera.update(dt);
-  camera.resize(canvas.width, canvas.height);
+  camera.resize(GAME_SIZE, GAME_SIZE);
 
   switch (game.state) {
     case GameState.TITLE:
@@ -276,19 +299,22 @@ function updatePlaying(dt) {
   // Update catapult
   catapult.update(dt);
 
+  // Convert input to game coordinates
+  const gm = canvasToGame(input.mouseX, input.mouseY);
+
   // Handle aiming
   if (input.mouseJustPressed) {
     if (!catapult.aiming && !catapult.reloading) {
       // Check if clicking on ammo bar first
-      const ammoClicked = handleAmmoBarClick(input.mouseX, input.mouseY);
+      const ammoClicked = handleAmmoBarClick(gm.x, gm.y);
       if (!ammoClicked) {
-        catapult.startAim(input.mouseX, input.mouseY);
+        catapult.startAim(gm.x, gm.y);
       }
     }
   }
 
   if (input.mouseDown && catapult.aiming) {
-    catapult.updateAim(input.mouseX, input.mouseY, canvas.height);
+    catapult.updateAim(gm.x, gm.y, GAME_SIZE);
   }
 
   if (input.mouseJustReleased && catapult.aiming) {
@@ -411,12 +437,12 @@ function completeLevelScreen() {
 }
 
 function handleAmmoBarClick(mx, my) {
-  const barY = canvas.height - 50;
+  const barY = GAME_SIZE - 50;
   if (my < barY - 20 || my > barY + 20) return false;
 
   const ammoTypes = [AmmoType.BOULDER, AmmoType.FIREBALL, AmmoType.ICE_BOMB, AmmoType.MEGA_BOMB];
   const spacing = 60;
-  const startX = canvas.width / 2 - (ammoTypes.length * spacing) / 2 + spacing / 2;
+  const startX = GAME_SIZE / 2 - (ammoTypes.length * spacing) / 2 + spacing / 2;
 
   for (let i = 0; i < ammoTypes.length; i++) {
     const type = ammoTypes[i];
@@ -433,15 +459,22 @@ function handleAmmoBarClick(mx, my) {
 
 // --- Main Draw ---
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Clear and fill letterbox areas with sky color
+  ctx.fillStyle = '#1a1a2e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Apply game coordinate transform (800x800 virtual → viewport)
+  ctx.save();
+  ctx.translate(gameOffsetX, gameOffsetY);
+  ctx.scale(gameScale, gameScale);
 
   switch (game.state) {
     case GameState.TITLE:
-      menus.drawTitleScreen(ctx, canvas.width, canvas.height);
+      menus.drawTitleScreen(ctx, GAME_SIZE, GAME_SIZE);
       break;
 
     case GameState.LEVEL_SELECT:
-      menus.drawLevelSelect(ctx, canvas.width, canvas.height, game.progress);
+      menus.drawLevelSelect(ctx, GAME_SIZE, GAME_SIZE, game.progress);
       break;
 
     case GameState.PRE_LEVEL:
@@ -452,19 +485,21 @@ function draw() {
 
     case GameState.PAUSED:
       drawGameplay();
-      menus.drawPauseOverlay(ctx, canvas.width, canvas.height);
+      menus.drawPauseOverlay(ctx, GAME_SIZE, GAME_SIZE);
       break;
 
     case GameState.GAME_OVER:
       drawGameplay();
-      menus.drawGameOver(ctx, canvas.width, canvas.height, waveSystem, scoring);
+      menus.drawGameOver(ctx, GAME_SIZE, GAME_SIZE, waveSystem, scoring);
       break;
 
     case GameState.LEVEL_COMPLETE:
       drawGameplay();
-      menus.drawLevelComplete(ctx, canvas.width, canvas.height, menus.levelCompleteData);
+      menus.drawLevelComplete(ctx, GAME_SIZE, GAME_SIZE, menus.levelCompleteData);
       break;
   }
+
+  ctx.restore();
 }
 
 function drawGameplay() {
@@ -492,18 +527,19 @@ function drawGameplay() {
 
   camera.restore(ctx);
 
-  // UI (not affected by camera)
-  catapult.drawAimingUI(ctx, canvas.width, canvas.height);
-  catapult.drawAmmoBar(ctx, canvas.width, canvas.height, game.progress.unlockedAmmo);
-  hud.draw(ctx, canvas.width, canvas.height, { waveSystem, scoringSystem: scoring });
+  // UI (not affected by camera, but still in game coordinates)
+  catapult.drawAimingUI(ctx, GAME_SIZE, GAME_SIZE);
+  catapult.drawAmmoBar(ctx, GAME_SIZE, GAME_SIZE, game.progress.unlockedAmmo);
+  hud.draw(ctx, GAME_SIZE, GAME_SIZE, { waveSystem, scoringSystem: scoring });
 }
 
 // --- Input Handling for Menus ---
 function handleMenuInput() {
   if (!input.mouseJustPressed) return;
 
-  menus.handleHover(input.mouseX, input.mouseY);
-  const clicked = menus.handleClick(input.mouseX, input.mouseY);
+  const gm = canvasToGame(input.mouseX, input.mouseY);
+  menus.handleHover(gm.x, gm.y);
+  const clicked = menus.handleClick(gm.x, gm.y);
   if (!clicked) return;
 
   audio.init();
@@ -564,7 +600,8 @@ function handleMenuHover() {
   if (game.state === GameState.TITLE || game.state === GameState.LEVEL_SELECT ||
       game.state === GameState.GAME_OVER || game.state === GameState.LEVEL_COMPLETE ||
       game.state === GameState.PAUSED) {
-    menus.handleHover(input.mouseX, input.mouseY);
+    const gm = canvasToGame(input.mouseX, input.mouseY);
+    menus.handleHover(gm.x, gm.y);
   }
 }
 
