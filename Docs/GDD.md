@@ -17,7 +17,7 @@
 
 ## Core Concept
 
-The player defends a hilltop castle by launching boulders (and other projectiles) from a trebuchet to destroy bridges, walkways, and terrain along a winding mountain path. Waves of zombies march uphill toward the castle gates. When a bridge is destroyed, zombies fall into the chasm below. But the undead are resourceful — some carry planks, ladders, and other materials to rebuild crossings or create makeshift paths over gaps.
+The player defends a hilltop castle by launching boulders (and other projectiles) from a catapult to destroy bridges, walkways, and terrain along a winding mountain path. Waves of zombies march uphill toward the castle gates. When a bridge is destroyed, zombies fall into the chasm below. But the undead are resourceful — some carry planks, ladders, and other materials to rebuild crossings or create makeshift paths over gaps.
 
 The game blends **Angry Birds-style projectile physics and structural destruction** with **Plants vs. Zombies-style wave management and enemy variety**. Each level is a multi-lane mountain approach where zombies wind their way up switchback paths connected by destructible bridges.
 
@@ -28,7 +28,7 @@ The game blends **Angry Birds-style projectile physics and structural destructio
 ```
 ┌─────────────────────────────────────────────────┐
 │  1. SCOUT — Survey the approaching zombie wave   │
-│  2. AIM   — Angle and power the trebuchet        │
+│  2. AIM   — Angle and power the catapult          │
 │  3. FIRE  — Launch projectile at a bridge/path   │
 │  4. WATCH — Physics resolves: debris falls,       │
 │             zombies tumble, structures collapse   │
@@ -110,8 +110,6 @@ Each bridge is composed of **physics bodies** — planks, beams, stones, chains 
 
 ## The Catapult / Slingshot (Player Weapon)
 
-The player views the battlefield from **atop the castle walls, looking downhill**. The catapult sits at the bottom of the screen (on the castle battlements). The winding mountain path stretches away from the player toward the top of the screen. **The Y-axis is the depth axis** — the closer to the top of the screen, the farther away from the castle, and the smaller zombies and bridges appear.
-
 The player uses a **slingshot/drag-back mechanic** inspired by Angry Birds but adapted for top-down perspective — drag back from the catapult to aim, a targeting reticle shows where the shot will land, release to fire.
 
 ### Perspective & Depth
@@ -139,11 +137,7 @@ The player uses a **slingshot/drag-back mechanic** inspired by Angry Birds but a
 └──────────────────────────────────────────────┘
 ```
 
-**Depth rules:**
-- **Scale**: Objects at the top of the screen render at ~40% size. Objects near the castle render at 100% size. Linear interpolation between
-- **Zombies get bigger** as they approach — creates mounting visual tension
-- **Bridges at different depths** have different apparent sizes — far bridges are small, close bridges fill more of the screen
-- **Perspective foreshortening** on the paths — switchback paths narrow as they recede
+Perspective scaling rules are defined in **The Mountain Map** section above (40% at top → 100% at bottom, with foreshortening on paths).
 
 ### Controls
 
@@ -615,10 +609,10 @@ Quick reference for how each zombie type interacts with key game elements:
 The game features **two distinct gameplay phases** that alternate during each level:
 
 ### Phase 1: Slingshot (Bridge Breaker)
-The primary gameplay mode. Side-view of the mountain approach. Player launches projectiles from the catapult to destroy bridges and kill zombies on the path. This is the strategic, physics-based phase.
+The primary gameplay mode. Top-down view looking downhill from the castle walls. Player launches projectiles from the catapult to destroy bridges and kill zombies on the winding mountain path. This is the strategic, physics-based phase.
 
 ### Phase 2: Gate Defense
-When zombies reach the castle wall, the perspective **shifts to top-down** looking down from the battlements. The player sees the castle gate (with an iron portcullis) and the horde massing below. The player deploys defensive items by tapping/clicking below the wall:
+When zombies reach the castle wall, the camera **zooms in to a close-up** of the battlements. The player sees the castle gate (with an iron portcullis) and the horde massing just beyond the wall. The player deploys defensive items by tapping/clicking below the wall:
 
 | Defense | Icon | Count | Effect |
 |---------|------|-------|--------|
@@ -677,7 +671,7 @@ BEFORE HIT:                    AFTER HIT:
 - **Rubble Accumulation**: Debris piles up at the bottom of chasms. If enough debris accumulates, zombies can **walk across the rubble pile** — rewarding players who aim for the edges, not the center
 - **Chain Reactions**: A falling stone block can hit another bridge below, causing cascading destruction
 - **Water**: Some chasms have water — debris sinks, zombies drown (except raft builders)
-- **Oil Slicks**: Pre-placed on some bridges — ignitable with fire barrel for area denial
+- **Oil Slicks**: Pre-placed on some bridges — ignitable with Fireball for area denial
 
 ---
 
@@ -703,14 +697,14 @@ INTERMISSION (5-10 seconds)
 NEXT WAVE
 ```
 
-### Wave Composition Example (Level 1)
+### Wave Composition Example (Level 1-5, World 1 Finale)
 
 | Wave | Zombies | Composition |
 |------|---------|-------------|
 | 1 | 8 | 8 Shamblers — learn the basics |
-| 2 | 12 | 10 Shamblers + 2 Runners — speed pressure |
-| 3 | 15 | 8 Shamblers + 4 Runners + 3 Plank Carriers — **builders introduced** |
-| 4 | 20 | 10 Shamblers + 4 Runners + 4 Plank Carriers + 2 Engineers |
+| 2 | 12 | 10 Shamblers + 2 Sprinters — speed pressure |
+| 3 | 15 | 8 Shamblers + 4 Sprinters + 3 Engineers — **builders introduced** |
+| 4 | 20 | 10 Shamblers + 4 Sprinters + 4 Engineers + 2 Plank Carriers |
 | 5 (Final) | 25 | Mixed horde + 1 Brute + 2 Engineers + Shield Bearer |
 
 ### Difficulty Scaling
@@ -728,22 +722,22 @@ NEXT WAVE
 ### World 1: The Foothills (Levels 1-5)
 - **Theme**: Grassy cliffs, wooden bridges, clear skies
 - **Bridges**: Rope and wooden only
-- **Enemies**: Shamblers, Runners, Plank Carriers
-- **Ammo**: Boulders only (Fire Barrel unlocked at Level 3)
+- **Enemies**: Shamblers, Sprinters, Engineers
+- **Ammo**: Boulders only (Fireball unlocked at Level 1-5)
 - **Teaching**: Core loop — aim, fire, destroy, survive
 
 ### World 2: The Gorge (Levels 6-10)
 - **Theme**: Deep canyon, rushing river below, stone bridges
 - **Bridges**: Stone and iron added
 - **Enemies**: + Brutes, Engineers, Ladder Zombies
-- **Ammo**: + Chain Shot (Level 5), Ice Bomb (Level 7)
+- **Ammo**: + Fireball (Level 2-1), Ice Bomb (Level 2-5)
 - **Mechanic Intro**: Water crossings, raft builders, rubble accumulation matters
 
 ### World 3: The Dark Approach (Levels 11-15)
 - **Theme**: Night, fog, volcanic rock, lava chasms
 - **Bridges**: Mix of all types, some pre-damaged
 - **Enemies**: + Rope Throwers, Shield Bearers, Necromancers
-- **Ammo**: + Tar Pot (Level 9 — available here)
+- **Ammo**: + Mega Bomb (Level 3-4)
 - **Mechanic Intro**: Limited visibility (fog of war), oil slick / fire combos
 
 ### World 4: The Keep (Levels 16-20)
@@ -835,7 +829,7 @@ All audio generated programmatically via **Web Audio API** (no external audio fi
 
 | Event | Sound |
 |-------|-------|
-| Trebuchet fire | Deep thwack + whoosh |
+| Catapult fire | Deep thwack + whoosh |
 | Boulder impact (stone) | Heavy crunch + rumble |
 | Boulder impact (wood) | Crack + splinter |
 | Bridge collapse | Creaking + crashing cascade |
@@ -884,9 +878,9 @@ Procedural ambient medieval soundtrack — lute arpeggios, low drums, tension st
       debris.js               # Debris & rubble management
       ragdoll.js              # Zombie ragdoll on fall
     /entities
-      trebuchet.js            # Player weapon, aim & fire
+      catapult.js             # Player weapon, aim & fire
       zombie.js               # Base zombie class
-      zombie-types.js         # Shambler, Runner, Brute, etc.
+      zombie-types.js         # Shambler, Sprinter, Brute, etc.
       builders.js             # Plank Carrier, Engineer, etc.
       elites.js               # Shield Bearer, Necromancer, etc.
     /world
@@ -996,7 +990,7 @@ Returns top entries sorted by score.
   "level": 5,
   "stars": 3,
   "kills": 47,
-  "ammo": "fire_barrel"
+  "ammo": "fireball"
 }
 ```
 
@@ -1012,11 +1006,11 @@ Returns top entries sorted by score.
 ### Player Power Budget
 - Boulder reload: 1.5 seconds
 - Average bridge destruction: 2-3 boulders for wood, 4-5 for stone
-- Trebuchet range: Full map coverage with power adjustments
+- Catapult range: Full map coverage with power adjustments
 - Special ammo per wave: 2-4 shots depending on type
 
 ### Zombie Balance
-- Time from spawn to gate (unimpeded): ~45 seconds for Shambler, ~25 seconds for Runner
+- Time from spawn to gate (unimpeded): ~45 seconds for Shambler, ~25 seconds for Sprinter
 - Builder repair time: Should give player 2-3 shots to interrupt
 - Wave duration: 60-120 seconds of active combat
 - Ideal session length per level: 3-5 minutes
@@ -1037,7 +1031,7 @@ Inspired by George Fan's GDC 2012 talk ["How I Got My Mom to Play Through Plants
 ### Design Principles
 
 1. **Tutorial Chameleon** — The tutorial IS the game. No tutorial screens, no walls of text. Players learn by doing, never by reading
-2. **Do Over Read** — The first level teaches that you drag the catapult, projectiles fly in arcs, and bridges break. Zero text needed — the player sees the result of their action and understands
+2. **Do Over Read** — The first level teaches that you drag the catapult, projectiles fly toward the target, and bridges break. Zero text needed — the player sees the result of their action and understands
 3. **Spread Mechanics Over Time** — Introduce ONE new thing per level. Let players "play with their toys" before giving them new ones. Each small addition = a dopamine hit
 4. **Safe Introduction** — New zombie types first appear in an easy, manageable wave. The NEXT level uses that same zombie in a harder combination
 5. **Adaptive Messaging** — Show hint arrows/text only if the player seems stuck (e.g., hasn't fired after 10 seconds). Experienced players never see tutorial prompts
@@ -1067,14 +1061,14 @@ Step 2: "Drag back from the catapult to aim!"
 ────────────────────────────────────────────
 - Catapult on castle wall PULSES with orange glow
 - Arrow points to it
-- Player drags backward — trajectory preview arc appears in real-time
+- Player drags backward — targeting line and landing reticle appear in real-time
 - Text disappears as soon as player starts dragging
 - If player releases too early (weak shot), gentle prompt:
   "Pull back further for more power!"
 
 Step 3: (no text — player releases, boulder flies)
 ────────────────────────────────────────────
-- Boulder arcs through the air — camera FOLLOWS the projectile
+- Boulder flies up the screen into the distance — camera FOLLOWS the projectile
 - Impact on bridge — SATISFYING destruction: planks splinter, dust puffs
 - Bridge collapses with physics debris
 - Brief slow-motion on first-ever bridge destruction (0.5s)
@@ -1103,7 +1097,7 @@ Step 6: "Don't let the zombies reach your gate!"
 ────────────────────────────────────────────
 - THE stakes prompt (PvZ: "Don't let the zombies reach your house!")
 - Zombie health/progress bar appears in top-right corner of HUD
-- 3 Shamblers spawn at bottom, march slowly upward
+- 3 Shamblers spawn at top of screen, march slowly downward
 - They reach the gap where bridge was — and FALL IN
 - Comedic falling scream, splat sound
 - "+100 +100 +100" score popups
@@ -1117,7 +1111,7 @@ Step 7: (Second small wave — no prompts, player applies knowledge)
 - This is the real test — can they aim, fire, and destroy in time?
 - Bridge has a generous health (destroyed in 1-2 hits)
 - Zombies walk slowly, giving player plenty of time
-- If zombies DO cross, they continue up path — player sees gate
+- If zombies DO cross, they continue down path — player sees gate
   health decrease but level is forgiving (high gate HP)
 ```
 
@@ -1279,9 +1273,9 @@ Step 1: "You now have two bridges to defend!"
 - Text appears at bottom — terse, informative
 - (PvZ equivalent: "Sunflowers are an extremely important plant!")
 
-Step 2: "Try to destroy the lower bridge first!"
+Step 2: "Try to destroy the farther bridge first!"
 ────────────────────────────────────────────
-- Arrow points to Bridge 1 (the lower one, closer to zombie spawn)
+- Arrow points to Bridge 1 (the upper one on screen, closer to zombie spawn)
 - Gives player a CONCRETE GOAL — not vague advice, a specific target
 - (PvZ equivalent: "Try to plant at least 3 of them!")
 - Player fires boulder at Bridge 1 — destruction plays out
@@ -1299,7 +1293,7 @@ Step 3: "The more bridges you break, the fewer zombies reach your gate!"
 ```
 Step 4: (Zombies spawn — no more prompts)
 ────────────────────────────────────────────
-- 4 Shamblers march up from spawn
+- 4 Shamblers march down from spawn at top of screen
 - If Bridge 1 is destroyed, they fall at the first gap — free kills
 - If Bridge 2 is still intact, surviving zombies continue up
 - Player must now manage their reload time between two targets
@@ -1417,7 +1411,7 @@ Before each level starts, a brief **zombie preview** shows the horde massing at 
 │                                                      │
 │    The mountain path, zoomed out...                  │
 │                                                      │
-│    Zombies shuffling into formation at the bottom    │
+│    Zombies shuffling into formation at the top (far away)    │
 │    New zombie types HIGHLIGHTED with a glow          │
 │    Camera slowly pans up to reveal the full path     │
 │                                                      │
@@ -1438,7 +1432,7 @@ Each level introduces **exactly one new concept**. The player masters it before 
 
 | Level | New Mechanic | Unlock Reward | What Player Learns | Zombie Roster |
 |-------|-------------|---------------|-------------------|---------------|
-| **1-1** | Catapult + Boulder | — | Drag-to-aim, trajectory preview, release to fire. Destroy a single rope bridge. | 5 Shamblers (single file) |
+| **1-1** | Catapult + Boulder | — | Drag-to-aim, targeting reticle, release to fire. Destroy a single rope bridge. | 5 Shamblers (single file) |
 | **1-2** | Multiple bridges | Sprinter (Bestiary) | Must prioritize which bridge to destroy first. | 8 Shamblers (two bridges) |
 | **1-3** | Sprinters | Engineer (Bestiary) | Fast enemies that can jump small gaps — bridges must be fully destroyed, not just damaged | 6 Shamblers + 3 Sprinters |
 | **1-4** | **Engineers** | Gate Defense mode | THE core mechanic reveal. Engineers rebuild bridges — player must learn to prioritize killing them | 8 Shamblers + 2 Engineers |
@@ -1488,12 +1482,12 @@ Following PvZ's approach of delaying peripheral mechanics:
 ## MVP Scope (v1.0)
 
 ### Must Have
-- [ ] Trebuchet aiming and firing with trajectory preview
+- [ ] Catapult aiming and firing with targeting reticle
 - [ ] Matter.js physics world with gravity and collisions
 - [ ] Destructible bridges (wood type minimum) with breakable constraints
 - [ ] Boulder projectile with impact physics
 - [ ] Basic zombie pathfinding (follow path, cross bridges, fall into gaps)
-- [ ] Shambler and Runner zombie types
+- [ ] Shambler and Sprinter zombie types
 - [ ] Plank Carrier builder zombie (core differentiating mechanic)
 - [ ] Wave system with spawn timing
 - [ ] Win/lose conditions (gate breach counter)
@@ -1507,7 +1501,7 @@ Following PvZ's approach of delaying peripheral mechanics:
 - [ ] Leaderboard (Vercel KV)
 
 ### Nice to Have (v1.1)
-- [ ] Fire Barrel and Chain Shot ammo types
+- [ ] Fireball and Ice Bomb ammo types
 - [ ] Engineer and Ladder zombie builders
 - [ ] Stone and iron bridge types
 - [ ] Rubble accumulation mechanic
@@ -1519,11 +1513,11 @@ Following PvZ's approach of delaying peripheral mechanics:
 ### Future (v2.0+)
 - [ ] Worlds 3-4 (levels 11-20)
 - [ ] All elite zombie types
-- [ ] Ice Bomb and Tar Pot ammo
+- [ ] Mega Bomb ammo
 - [ ] Fog of war / night levels
 - [ ] Endless mode
 - [ ] Procedural level generation
-- [ ] Castle upgrades between levels (stronger trebuchet, defensive walls)
+- [ ] Castle upgrades between levels (stronger catapult, defensive walls)
 - [ ] Multiplayer: one player launches, one player commands zombie waves
 - [ ] Procedural music
 
