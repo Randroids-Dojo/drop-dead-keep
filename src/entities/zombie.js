@@ -50,6 +50,8 @@ export class Zombie {
     this.targetBridge = null;
     this.carriedPlanks = type === ZombieType.PLANK_CARRIER;
     this.hasPlacedPlanks = false;
+    this.canRepairBridge = type === ZombieType.ENGINEER || type === ZombieType.BRUTE;
+    this.bruteRebuildTime = 3; // Brutes rebuild fast
 
     // Sprinter-specific
     this.canJumpSmallGaps = type === ZombieType.SPRINTER;
@@ -80,12 +82,15 @@ export class Zombie {
       return;
     }
 
-    // Engineer building behavior
-    if (this.type === ZombieType.ENGINEER && this.isBuilding) {
+    // Building behavior (engineers and brutes)
+    if (this.canRepairBridge && this.isBuilding) {
       this.buildProgress += dt;
-      const buildTime = this.targetBridge ? this.targetBridge.rebuildTime : 5;
+      const buildTime = this.type === ZombieType.BRUTE
+        ? this.bruteRebuildTime
+        : (this.targetBridge ? this.targetBridge.rebuildTime : 5);
       if (this.buildProgress >= buildTime && this.targetBridge) {
-        this.targetBridge.rebuild(0.5);
+        const rebuildHp = this.type === ZombieType.BRUTE ? 0.4 : 0.5;
+        this.targetBridge.rebuild(rebuildHp);
         this.isBuilding = false;
         this.targetBridge = null;
         this.buildProgress = 0;
@@ -104,8 +109,8 @@ export class Zombie {
         // Check if this waypoint has a bridge
         if (wp.bridge && wp.bridge.destroyed) {
           // Bridge is destroyed!
-          if (this.type === ZombieType.ENGINEER && !this.isBuilding) {
-            // Engineer starts repairing
+          if (this.canRepairBridge && !this.isBuilding) {
+            // Engineer or brute starts repairing
             this.isBuilding = true;
             this.buildProgress = 0;
             this.targetBridge = wp.bridge;
@@ -255,10 +260,12 @@ export class Zombie {
       const barW = s * 2;
       const barH = 3;
       const barY = y + bob - s * 1.5;
-      const buildTime = this.targetBridge ? this.targetBridge.rebuildTime : 5;
+      const buildTime = this.type === ZombieType.BRUTE
+        ? this.bruteRebuildTime
+        : (this.targetBridge ? this.targetBridge.rebuildTime : 5);
       ctx.fillStyle = '#333';
       ctx.fillRect(x - barW / 2, barY, barW, barH);
-      ctx.fillStyle = '#e67e22';
+      ctx.fillStyle = this.type === ZombieType.BRUTE ? '#c0392b' : '#e67e22';
       ctx.fillRect(x - barW / 2, barY, barW * (this.buildProgress / buildTime), barH);
     }
 

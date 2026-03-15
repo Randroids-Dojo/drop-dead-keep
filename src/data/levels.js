@@ -25,18 +25,21 @@ export const LEVELS = {
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 3, startDelay: 1, stagger: 1.5 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 3, stagger: 1 },
         ],
         spawnInterval: 1.5,
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 3, startDelay: 0, stagger: 1.2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 2, stagger: 1 },
         ],
         spawnInterval: 1.2,
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 5, startDelay: 0, stagger: 1.0 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 3, stagger: 1 },
         ],
         spawnInterval: 1.0,
       },
@@ -77,16 +80,19 @@ export const LEVELS = {
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 4, startDelay: 0, stagger: 1.2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 3, stagger: 1 },
         ],
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 6, startDelay: 0, stagger: 1.0 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 4, stagger: 1 },
         ],
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 8, startDelay: 0, stagger: 0.8 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 4, stagger: 1 },
         ],
       },
     ],
@@ -124,18 +130,21 @@ export const LEVELS = {
         groups: [
           { type: ZombieType.SHAMBLER, count: 4, startDelay: 0, stagger: 1.5 },
           { type: ZombieType.SPRINTER, count: 1, startDelay: 4, stagger: 2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 3, stagger: 1 },
         ],
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 4, startDelay: 0, stagger: 1.0 },
           { type: ZombieType.SPRINTER, count: 2, startDelay: 3, stagger: 1.5 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 5, stagger: 1 },
         ],
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 5, startDelay: 0, stagger: 0.8 },
           { type: ZombieType.SPRINTER, count: 3, startDelay: 2, stagger: 1.0 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 4, stagger: 1 },
         ],
       },
     ],
@@ -166,12 +175,14 @@ export const LEVELS = {
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 4, startDelay: 0, stagger: 1.2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 3, stagger: 1 },
         ],
       },
       {
         groups: [
           { type: ZombieType.SHAMBLER, count: 4, startDelay: 0, stagger: 1.0 },
           { type: ZombieType.ENGINEER, count: 1, startDelay: 3, stagger: 2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 4, stagger: 1 },
         ],
       },
       {
@@ -179,6 +190,7 @@ export const LEVELS = {
           { type: ZombieType.SHAMBLER, count: 6, startDelay: 0, stagger: 0.8 },
           { type: ZombieType.ENGINEER, count: 2, startDelay: 2, stagger: 3 },
           { type: ZombieType.SPRINTER, count: 2, startDelay: 5, stagger: 1.5 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 6, stagger: 1 },
         ],
       },
       {
@@ -186,6 +198,7 @@ export const LEVELS = {
           { type: ZombieType.SHAMBLER, count: 8, startDelay: 0, stagger: 0.7 },
           { type: ZombieType.ENGINEER, count: 2, startDelay: 3, stagger: 2 },
           { type: ZombieType.SPRINTER, count: 3, startDelay: 4, stagger: 1.0 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 6, stagger: 1 },
         ],
       },
     ],
@@ -221,6 +234,7 @@ export const LEVELS = {
         groups: [
           { type: ZombieType.SHAMBLER, count: 5, startDelay: 0, stagger: 1.0 },
           { type: ZombieType.SPRINTER, count: 2, startDelay: 3, stagger: 1.5 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 4, stagger: 1 },
         ],
       },
       {
@@ -228,6 +242,7 @@ export const LEVELS = {
           { type: ZombieType.SHAMBLER, count: 6, startDelay: 0, stagger: 0.8 },
           { type: ZombieType.ENGINEER, count: 2, startDelay: 2, stagger: 3 },
           { type: ZombieType.SPRINTER, count: 2, startDelay: 5, stagger: 1 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 6, stagger: 1 },
         ],
       },
       {
@@ -235,6 +250,7 @@ export const LEVELS = {
           { type: ZombieType.SHAMBLER, count: 6, startDelay: 0, stagger: 0.8 },
           { type: ZombieType.PLANK_CARRIER, count: 2, startDelay: 2, stagger: 3 },
           { type: ZombieType.ENGINEER, count: 2, startDelay: 4, stagger: 2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 5, stagger: 1 },
         ],
       },
       {
@@ -243,6 +259,7 @@ export const LEVELS = {
           { type: ZombieType.SPRINTER, count: 3, startDelay: 2, stagger: 1.0 },
           { type: ZombieType.ENGINEER, count: 2, startDelay: 4, stagger: 2 },
           { type: ZombieType.PLANK_CARRIER, count: 2, startDelay: 6, stagger: 2 },
+          { type: ZombieType.BRUTE, count: 1, startDelay: 7, stagger: 1 },
         ],
       },
       {
@@ -251,7 +268,7 @@ export const LEVELS = {
           { type: ZombieType.SPRINTER, count: 4, startDelay: 1, stagger: 0.8 },
           { type: ZombieType.ENGINEER, count: 3, startDelay: 3, stagger: 2 },
           { type: ZombieType.PLANK_CARRIER, count: 2, startDelay: 5, stagger: 2 },
-          { type: ZombieType.BRUTE, count: 1, startDelay: 8, stagger: 1 },
+          { type: ZombieType.BRUTE, count: 2, startDelay: 8, stagger: 2 },
         ],
       },
     ],
