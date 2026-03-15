@@ -97,20 +97,12 @@ export class HUD {
       this.drawFailureHint(ctx, canvasWidth, canvasHeight);
     }
 
-    // Instruction text at very bottom
-    if (!waveSystem.waveActive && !waveSystem.allWavesComplete && !waveSystem.inIntermission) {
+    // Instruction text at very bottom (only during active gameplay)
+    if (waveSystem.waveActive) {
       ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.font = '12px monospace';
       ctx.textAlign = 'center';
       ctx.fillText('DRAG FROM CATAPULT TO AIM : RELEASE TO FIRE', canvasWidth / 2, canvasHeight - 8);
-    }
-
-    // Intermission countdown
-    if (waveSystem.inIntermission) {
-      ctx.fillStyle = '#e67e22';
-      ctx.font = 'bold 16px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(`NEXT WAVE IN ${Math.ceil(waveSystem.intermissionTimer)}...`, canvasWidth / 2, canvasHeight / 2 - 50);
     }
 
     // Score popups

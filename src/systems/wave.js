@@ -13,9 +13,6 @@ export class WaveSystem {
     this.waveActive = false;
     this.waveComplete = false;
     this.allWavesComplete = false;
-    this.intermissionTimer = 0;
-    this.intermissionDuration = 5;
-    this.inIntermission = false;
 
     // Stats
     this.zombiesKilled = 0;
@@ -57,7 +54,6 @@ export class WaveSystem {
     this.spawnQueue = [];
     this.waveActive = true;
     this.waveComplete = false;
-    this.inIntermission = false;
 
     this.spawnInterval = wave.spawnInterval || 1.0;
 
@@ -81,14 +77,6 @@ export class WaveSystem {
   }
 
   update(dt, bridges) {
-    if (this.inIntermission) {
-      this.intermissionTimer -= dt;
-      if (this.intermissionTimer <= 0) {
-        this.inIntermission = false;
-      }
-      return;
-    }
-
     if (!this.waveActive) return;
 
     this.spawnTimer += dt;
@@ -112,14 +100,15 @@ export class WaveSystem {
       // Check gate breach
       if (zombie.reachedGate && zombie.alive) {
         zombie.alive = false;
+        zombie._breached = true;
         this.zombiesBreached++;
         const dmg = this.gateDamagePerZombie[zombie.type] || 5;
         this.gateHp = Math.max(0, this.gateHp - dmg);
       }
     }
 
-    // Track kills (count dead non-falling zombies before removal)
-    const deadThisFrame = this.zombies.filter(z => !z.alive && !z.falling);
+    // Track kills (count dead non-falling zombies, excluding gate breaches)
+    const deadThisFrame = this.zombies.filter(z => !z.alive && !z.falling && !z._breached);
     this.zombiesKilled += deadThisFrame.length;
 
     // Remove dead zombies that have finished their animations
@@ -133,9 +122,6 @@ export class WaveSystem {
 
       if (this.currentWave >= this.waves.length) {
         this.allWavesComplete = true;
-      } else {
-        this.inIntermission = true;
-        this.intermissionTimer = this.intermissionDuration;
       }
     }
   }
@@ -149,7 +135,7 @@ export class WaveSystem {
   }
 
   isLevelComplete() {
-    return this.allWavesComplete && this.zombies.filter(z => z.alive).length === 0;
+    return this.allWavesComplete && this.zombies.length === 0;
   }
 
   getCurrentWaveNumber() {

@@ -47,7 +47,6 @@ let currentLevelId = null;
 let tutorialStep = 0;
 let firstShotFired = false;
 let shotsFired = 0;
-let waveStarted = false;
 let preWaveTimer = 0;
 
 // --- Level Loading ---
@@ -72,7 +71,6 @@ function loadLevel(levelId) {
   tutorialStep = 0;
   firstShotFired = false;
   shotsFired = 0;
-  waveStarted = false;
   preWaveTimer = 2;
 
   game.setState(GameState.PRE_LEVEL);
@@ -123,7 +121,8 @@ function updateTutorial(dt) {
       break;
 
     case 'first_fire_2':
-      if (shotsFired >= 1 && !catapult.aiming) {
+      // Wait for the "Nicely done!" message to fade before showing this
+      if (shotsFired >= 1 && !catapult.aiming && !hud.tutorialMessage) {
         hud.showTutorial(step.message, step.duration || 8, true);
         tutorialStep++;
       }
@@ -293,19 +292,9 @@ function updatePlaying(dt) {
     return;
   }
 
-  // Update projectiles
+  // Update projectiles and handle impacts
   for (const proj of projectiles) {
     proj.update(dt);
-    if (proj.impacted && proj.impactTime === 0) {
-      // Just impacted — note: impactTime will be > 0 after first update
-    }
-  }
-
-  // Check for new impacts
-  for (const proj of projectiles) {
-    if (proj.impacted && proj.impactTime < dt * 2 && proj.impactTime > 0) {
-      // This is approximately the frame the impact happened
-    }
     if (proj.impacted && !proj._impactHandled) {
       proj._impactHandled = true;
       handleProjectileImpact(proj);
@@ -374,7 +363,6 @@ function startNextWave() {
       hud.showBanner(`WAVE ${waveSystem.getCurrentWaveNumber()}`, 1.5);
     }
     audio.play('wave_horn');
-    waveStarted = true;
   }
 }
 

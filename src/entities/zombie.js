@@ -75,6 +75,7 @@ export class Zombie {
       this.size *= 0.98;
       if (this.y > 1000) {
         this.alive = false;
+        this.falling = false; // Allow cleanup by wave system
       }
       return;
     }
@@ -198,6 +199,8 @@ export class Zombie {
     ctx.fillStyle = '#fff';
     ctx.beginPath();
     ctx.arc(x - eyeOffsetX, eyeY, eyeSize, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
     ctx.arc(x + eyeOffsetX, eyeY, eyeSize, 0, Math.PI * 2);
     ctx.fill();
 
@@ -206,6 +209,8 @@ export class Zombie {
     const pupilOff = this.facingRight ? 1 : -1;
     ctx.beginPath();
     ctx.arc(x - eyeOffsetX + pupilOff, eyeY, eyeSize * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
     ctx.arc(x + eyeOffsetX + pupilOff, eyeY, eyeSize * 0.5, 0, Math.PI * 2);
     ctx.fill();
 

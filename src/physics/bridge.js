@@ -39,7 +39,7 @@ export class Bridge {
     const plankW = stats.plankWidth * this.scale;
     const plankH = stats.plankHeight * this.scale;
     const count = stats.plankCount;
-    const gap = (this.width - plankW) / (count - 1);
+    const gap = count > 1 ? (this.width - plankW) / (count - 1) : 0;
 
     for (let i = 0; i < count; i++) {
       const px = this.x - this.width / 2 + plankW / 2 + gap * i;
