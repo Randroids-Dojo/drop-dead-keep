@@ -735,6 +735,79 @@ Derived from PvZ's approach and George Fan's GDC principles:
 - **Fail-safe**: If player does nothing for 15 seconds, re-show the current prompt with a subtle pulse
 - **The lawnmower equivalent**: PvZ has lawnmowers as a last-resort safety net. Our equivalent: the gate has generous HP in early levels (can absorb 10+ zombie hits), so even if some get through, the player doesn't lose on Level 1
 
+### Level 1-2: Second Level (Scaled Up + New Mechanic)
+
+Level 2 follows PvZ's exact pattern: bigger map, new tool introduced with guided prompts, then player is on their own. In PvZ, Level 2 jumps from 1 lane to 3 and introduces sunflowers. Our Level 1-2 jumps from 1 bridge to 2 bridges.
+
+**Map Setup**: Mountain with TWO bridges on the path (not just one). Still only Shamblers. Still only boulders. The increase is in spatial complexity, not enemy variety.
+
+**Phase 1: New Mechanic Highlighted**
+
+```
+Step 1: "You now have two bridges to defend!"
+────────────────────────────────────────────
+- Camera pans across the mountain path, pausing briefly on each bridge
+- Both bridges PULSE with orange outline to draw attention
+- Text appears at bottom — terse, informative
+- (PvZ equivalent: "Sunflowers are an extremely important plant!")
+
+Step 2: "Try to destroy the lower bridge first!"
+────────────────────────────────────────────
+- Arrow points to Bridge 1 (the lower one, closer to zombie spawn)
+- Gives player a CONCRETE GOAL — not vague advice, a specific target
+- (PvZ equivalent: "Try to plant at least 3 of them!")
+- Player fires boulder at Bridge 1 — destruction plays out
+
+Step 3: "The more bridges you break, the fewer zombies reach your gate!"
+────────────────────────────────────────────
+- Connects the new complexity to the core mechanic they already know
+- (PvZ equivalent: "The more sunflowers you have, the faster you
+  can grow plants!")
+- Text fades after 2 seconds — player now understands the WHY
+```
+
+**Phase 2: Player On Their Own**
+
+```
+Step 4: (Zombies spawn — no more prompts)
+────────────────────────────────────────────
+- 4 Shamblers march up from spawn
+- If Bridge 1 is destroyed, they fall at the first gap — free kills
+- If Bridge 2 is still intact, surviving zombies continue up
+- Player must now manage their reload time between two targets
+
+Step 5: (Second wave — more zombies, faster spacing)
+────────────────────────────────────────────
+- 6 Shamblers in two groups
+- Player learns to prioritize: which bridge matters more RIGHT NOW?
+- Strategic thinking emerges naturally — no prompts needed
+```
+
+**Phase 3: Escalation**
+
+```
+Step 6: "A HUGE WAVE OF ZOMBIES IS APPROACHING!"
+────────────────────────────────────────────
+- Dramatic red text slides across screen (PvZ-style)
+- 8 Shamblers in a dense cluster
+- Both bridges should be destroyed by now for an easy clear
+- If not, player experiences pressure — motivates better play next time
+
+Step 7: Level Complete + Unlock
+────────────────────────────────────────────
+- Fanfare, star rating, score summary
+- Unlock card: "YOU DISCOVERED A NEW ZOMBIE! Sprinter — Fast but
+  fragile. Can leap small gaps."
+- Sets up anticipation for Level 1-3
+```
+
+**Design notes for Level 1-2:**
+- **Scale, not complexity** — same tools, same enemy, just MORE of the map to manage
+- **Concrete guidance** — "Try to destroy the lower bridge first!" gives a specific number/target, not vague advice
+- **Explain the WHY** — connect new complexity to existing knowledge
+- **Then silence** — after 3 prompts, no more hand-holding. Player applies what they learned
+- **"A HUGE WAVE" banner** — distinct from Level 1's "FINAL WAVE". PvZ uses both at different moments for escalating drama
+
 ### Unlock Reward Screen
 
 After completing each level, if the next level introduces a new ammo type or mechanic, an **unlock reward card** appears (modeled on PvZ's "YOU GOT A NEW PLANT!" screen):
