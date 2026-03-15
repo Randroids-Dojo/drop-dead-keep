@@ -83,7 +83,8 @@ export class Zombie {
     // Engineer building behavior
     if (this.type === ZombieType.ENGINEER && this.isBuilding) {
       this.buildProgress += dt;
-      if (this.buildProgress >= 5 && this.targetBridge) {
+      const buildTime = this.targetBridge ? this.targetBridge.rebuildTime : 5;
+      if (this.buildProgress >= buildTime && this.targetBridge) {
         this.targetBridge.rebuild(0.5);
         this.isBuilding = false;
         this.targetBridge = null;
@@ -254,10 +255,11 @@ export class Zombie {
       const barW = s * 2;
       const barH = 3;
       const barY = y + bob - s * 1.5;
+      const buildTime = this.targetBridge ? this.targetBridge.rebuildTime : 5;
       ctx.fillStyle = '#333';
       ctx.fillRect(x - barW / 2, barY, barW, barH);
       ctx.fillStyle = '#e67e22';
-      ctx.fillRect(x - barW / 2, barY, barW * (this.buildProgress / 5), barH);
+      ctx.fillRect(x - barW / 2, barY, barW * (this.buildProgress / buildTime), barH);
     }
 
     ctx.restore();

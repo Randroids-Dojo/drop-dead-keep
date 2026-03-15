@@ -116,6 +116,16 @@ export class Bridge {
     }
     this.debris = [];
 
+    // Clear any stale references before rebuilding
+    for (const p of this.planks) {
+      this.physics.removeBody(p);
+    }
+    this.planks = [];
+    for (const c of this.constraints) {
+      this.physics.removeConstraint(c);
+    }
+    this.constraints = [];
+
     // Rebuild physics
     const stats = BRIDGE_STATS[this.type];
     this.buildPhysics(stats);
