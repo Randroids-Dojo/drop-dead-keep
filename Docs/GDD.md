@@ -734,6 +734,28 @@ Derived from PvZ's approach and George Fan's GDC principles:
 - **If player already knows**: Adaptive check — if player fires without prompts, skip all tutorial text. "Just get the player to do it once"
 - **Fail-safe**: If player does nothing for 15 seconds, re-show the current prompt with a subtle pulse
 - **The lawnmower equivalent**: PvZ has lawnmowers as a last-resort safety net. Our equivalent: the gate has generous HP in early levels (can absorb 10+ zombie hits), so even if some get through, the player doesn't lose on Level 1
+- **Failure coaching** — When the player makes a mistake, don't just let them fail silently. Show a reactive hint explaining what went wrong and suggesting a fix. PvZ: "One of your peashooters died! Try planting them further to the left!" This teaches positioning strategy through failure, not upfront lectures
+- **Tease the next unlock** — At the end of each level, the next level's reward icon briefly appears on-screen (PvZ shows the Wall-nut icon with an arrow at bottom-right of Level 3). Builds anticipation and motivation to continue
+
+### Failure Coaching Messages
+
+Reactive hints that appear ONLY when the player makes a specific mistake. Never shown proactively — only triggered by the failure event itself.
+
+| Trigger | Message | What It Teaches |
+|---------|---------|-----------------|
+| Bridge rebuilt by Engineer | "An Engineer rebuilt that bridge! Take them out before they reach the gap!" | Prioritize killing Engineers |
+| Zombie crosses intact bridge | "Destroy the bridge before they cross!" | Timing / urgency |
+| Boulder misses (hits nothing) | "Aim for the bridge, not the path!" | Targeting accuracy |
+| 3+ zombies breach gate in one wave | "Too many got through! Focus on the closest bridge to the gate!" | Priority management |
+| Player hasn't fired in 20 seconds | "Don't forget to fire! Tap a boulder to get started." | Re-engagement |
+| Fireball used on stone bridge | "Fireballs work best on wooden bridges!" | Ammo-bridge matchups |
+| Zombies walk across rubble pile | "Debris piled up in the chasm! Aim for the edges next time." | Rubble accumulation awareness |
+
+**Rules for failure coaching:**
+- Show ONCE per failure type per level — never nag
+- Disappears after 3 seconds or on player's next action
+- Never shown on replayed levels (player already knows)
+- Tone is helpful, never punishing — "Try X!" not "You failed because..."
 
 ### Level 1-2: Second Level (Scaled Up + New Mechanic)
 
