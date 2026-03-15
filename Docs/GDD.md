@@ -609,7 +609,11 @@ Inspired by George Fan's GDC 2012 talk ["How I Got My Mom to Play Through Plants
 
 Modeled directly on PvZ Level 1's approach: single lane, one tool, short terse prompts that guide without interrupting. The game world is simplified — only ONE bridge, ONE path, a handful of slow zombies. The entire playfield is stripped down so nothing distracts from the core mechanic being taught.
 
-**Map Setup**: Minimal mountain with just one bridge connecting spawn to the castle. Only boulders available. Only Shamblers (slowest, weakest zombie).
+**Map Setup**: Minimal mountain with just one bridge and one path. Only boulders available. Only Shamblers (slowest, weakest zombie). The map is deliberately stripped down — like PvZ's single lane + single plant type in Level 1.
+
+**Phase 1: Pre-Zombie (Learn the Weapon)**
+
+Before any zombies appear, the player learns the catapult in a zero-pressure environment.
 
 ```
 Step 1: "Tap on a boulder to pick it up!"
@@ -643,38 +647,93 @@ Step 4: "Nicely done! The bridge is destroyed!"
 - Text appears briefly (2 seconds), then fades
 - Score pops up: "+200 BRIDGE DESTROYED"
 
-Step 5: (Zombies spawn — no prompt needed)
+Step 5: "Tap on a boulder to fire again!"
 ────────────────────────────────────────────
-- 3 Shamblers appear at the bottom, march upward
-- They reach the gap where the bridge was — and FALL IN
+- Reinforcement through REPETITION (PvZ: "Tap on the peashooter
+  to plant another one!")
+- Player fires a second boulder at remaining bridge debris
+- No prompt after this — player now owns the mechanic
+```
+
+**Phase 2: Zombies Appear (Learn the Stakes)**
+
+Now zombies enter. The bridge is already destroyed, so the player immediately sees the payoff.
+
+```
+Step 6: "Don't let the zombies reach your gate!"
+────────────────────────────────────────────
+- THE stakes prompt (PvZ: "Don't let the zombies reach your house!")
+- Zombie health/progress bar appears in top-right corner of HUD
+- 3 Shamblers spawn at bottom, march slowly upward
+- They reach the gap where bridge was — and FALL IN
 - Comedic falling scream, splat sound
 - "+100 +100 +100" score popups
 - Player learns: destroy bridge → zombies fall. Core loop understood.
+- NO MORE PROMPTS after this — player is on their own
 
-Step 6: "Keep firing! More are coming!"
+Step 7: (Second small wave — no prompts, player applies knowledge)
 ────────────────────────────────────────────
-- Second small wave: 3 more Shamblers on same path
-- Bridge has NOT regenerated — zombies fall in automatically
-- Player gets free kills, feels powerful
-- If a second bridge exists (later path), prompt:
-  "Tap on the falling debris to collect bonus points!" (optional)
+- 3 more Shamblers on same path via a SECOND bridge (still intact)
+- Player must fire boulders to destroy this bridge before zombies cross
+- This is the real test — can they aim, fire, and destroy in time?
+- Bridge has a generous health (destroyed in 1-2 hits)
+- Zombies walk slowly, giving player plenty of time
+- If zombies DO cross, they continue up path — player sees gate
+  health decrease but level is forgiving (high gate HP)
+```
 
-Step 7: Wave Complete — Level Clear
+**Phase 3: Final Wave (Escalation Within Tutorial)**
+
+```
+Step 8: "FINAL WAVE" banner
+────────────────────────────────────────────
+- Big dramatic text slides across screen (PvZ-style)
+- 5 Shamblers spawn — the most so far
+- Some stagger, arriving in 2-3 small groups
+- Player fires multiple boulders to deal with them
+- Bridges may already be destroyed from earlier — free kills
+- If any bridges rebuilt (they don't in 1-1), player needs to
+  re-destroy them
+
+Step 9: Wave Complete — Level Clear
 ────────────────────────────────────────────
 - Fanfare sound
-- "WAVE COMPLETE" banner
+- "LEVEL COMPLETE" banner
 - Star rating appears (guaranteed 3 stars on tutorial)
-- "Level 1-1 Clear!" with score summary
+- Score summary + zombie kill count
 - Button: "NEXT LEVEL →"
 ```
 
-**Key tutorial UX rules** (matching PvZ):
+### Tutorial Flow Parallels
+
+| PvZ Level 1 | Drop Dead Keep Level 1-1 |
+|---|---|
+| "Tap on a seed packet to pick it up!" | "Tap on a boulder to pick it up!" |
+| "Tap on the grass to plant your seed!" | "Drag back from the catapult to aim!" |
+| "Nicely done!" | "Nicely done! The bridge is destroyed!" |
+| "Tap on the peashooter to plant another one!" | "Tap on a boulder to fire again!" |
+| "Tap on the falling sun to collect it!" | (Score popups teach points organically) |
+| "Keep on collecting sun!" | (No equivalent — ammo is simpler than sun economy) |
+| "Don't let the zombies reach your house!" | "Don't let the zombies reach your gate!" |
+| Zombie health bar appears top-right | Zombie progress bar appears top-right |
+| "FINAL WAVE" banner | "FINAL WAVE" banner |
+| Peashooters fire automatically — player observes | Destroyed bridges kill automatically — player observes |
+
+### Key Tutorial UX Rules
+
+Derived from PvZ's approach and George Fan's GDC principles:
+
 - **One prompt at a time** — never stack multiple instructions
 - **Prompts are reactive** — appear only when the player needs to do something, disappear the instant they start doing it
+- **Reinforcement through repetition** — make the player do the core action twice before introducing zombies (PvZ makes you plant two peashooters before any zombie appears)
+- **State the stakes plainly** — "Don't let the zombies reach your gate!" is clear, urgent, and memorable
 - **Positive reinforcement** — "Nicely done!" after first successful action
-- **Let results speak** — the bridge exploding and zombies falling teaches more than any text ever could
+- **Let results speak** — the bridge exploding and zombies falling teaches more than any text ever could. Like PvZ's peashooters auto-firing, our destroyed bridges auto-kill — the player watches their work pay off
+- **"FINAL WAVE" drama** — telegraphs the end, creates excitement, makes completion feel earned
+- **Escalation within the level** — 0 zombies → 3 zombies → 3 zombies → 5 zombies (FINAL WAVE). PvZ does the same: 0 → 1 → more → FINAL WAVE
 - **If player already knows**: Adaptive check — if player fires without prompts, skip all tutorial text. "Just get the player to do it once"
 - **Fail-safe**: If player does nothing for 15 seconds, re-show the current prompt with a subtle pulse
+- **The lawnmower equivalent**: PvZ has lawnmowers as a last-resort safety net. Our equivalent: the gate has generous HP in early levels (can absorb 10+ zombie hits), so even if some get through, the player doesn't lose on Level 1
 
 ### Level-by-Level Mechanic Introduction
 
