@@ -94,7 +94,7 @@ Each bridge is composed of **physics bodies** — planks, beams, stones, chains 
 
 ## The Catapult / Slingshot (Player Weapon)
 
-A catapult sits on the castle battlements. The player uses a **slingshot/drag-back mechanic** (Angry Birds-style) — drag back from the catapult to aim, trajectory preview shows where the shot will land, release to fire. Ammo types are selected from icons along the castle wall.
+A catapult sits on the castle battlements. The player uses a **slingshot/drag-back mechanic** identical to Angry Birds — drag back from the catapult to aim, a dotted trajectory arc shows exactly where the shot will land, release to fire. The entire aiming system is one continuous gesture: touch, drag, release.
 
 ### Controls
 
@@ -107,11 +107,59 @@ A catapult sits on the castle battlements. The player uses a **slingshot/drag-ba
 | Zoom | Scroll wheel | Pinch |
 
 ### Aiming System (Slingshot Mechanic)
-- **Drag-to-Aim**: Click/tap the catapult and drag backward. The drag direction and distance set both the launch angle and power in one gesture
-- **Trajectory Preview**: Dotted arc line shows the predicted flight path in real-time as the player drags
-- **Release to Fire**: Let go to launch the projectile
-- **Wind Indicator**: Arrow showing wind direction and strength (harder difficulties)
-- **Reload Timer**: Brief cooldown between shots (varies by ammo type)
+
+The aiming follows Angry Birds 2's slingshot exactly:
+
+```
+                    · · ·
+              · ·         · ·
+          · ·                 · · ▸
+        ·                         ▸ ·
+      ·                               · ▸
+    ·                                     · ·
+   ·                                          ▸ IMPACT
+  ╱                                              POINT
+ ╱  Catapult
+╱___arm
+║████║  ← Castle wall
+```
+
+**Step-by-step interaction:**
+
+1. **Touch/click the catapult** — The catapult arm highlights, showing it's interactive. The ammo (boulder) appears loaded in the cup/sling
+2. **Drag BACKWARD (away from target)** — This is the key Angry Birds convention: you pull BACK to aim FORWARD. The drag direction is OPPOSITE to the launch direction. The further you drag back, the more power
+3. **Trajectory preview appears in real-time** — A dotted arc of small circles traces the predicted flight path. The dots are:
+   - **Evenly spaced circles** along the parabolic arc (like AB2's green dots)
+   - **Small arrowhead indicators** between dots showing flight direction
+   - Arc updates in real-time as the player adjusts their drag angle/distance
+   - Arc **fades out** at the far end (dots get smaller/more transparent) — provides guidance but maintains some skill-based uncertainty about exact landing
+4. **Release to fire** — Let go of the drag. The catapult arm snaps forward, launching the projectile along the previewed arc
+5. **Camera follows projectile** — On release, the camera smoothly tracks the boulder as it arcs through the air toward the target. Slight zoom-in on impact for dramatic effect
+
+**Aiming physics:**
+- **Drag distance** = launch power (short drag = weak lob, long drag = powerful shot)
+- **Drag angle** = launch angle (drag down-left for a high arc, drag straight-left for a flat shot)
+- **Parabolic arc** = realistic projectile motion with gravity. The trajectory preview calculates the same physics curve the actual projectile will follow
+- **Max power cap** — there's a maximum drag distance beyond which power doesn't increase (prevents overshooting off-screen)
+- **Snap-back cancel** — if the player drags back to the catapult origin (very short distance), releasing cancels the shot without firing. Prevents accidental misfires
+
+**Visual feedback during aim:**
+- Catapult arm bends/stretches as player drags (elastic visual)
+- Power meter fills along the catapult base (subtle bar, 0-100%)
+- Ammo glows brighter as power increases
+- At max power, the ammo pulses and a subtle screen vibration (mobile haptics) signals "full power"
+
+**Wind (harder difficulties):**
+- Small arrow + number appears at top of screen showing wind direction and strength
+- Trajectory preview accounts for wind — the arc curves accordingly
+- Player must compensate by aiming upwind
+- Wind changes between waves, not between shots (so player can plan)
+
+**After firing:**
+- Brief reload animation (catapult arm resets, new ammo loads)
+- Reload time varies by ammo type
+- During reload, player can pan the camera to survey damage
+- Next ammo auto-loads (same type) unless player switches
 
 ### Ammo Types
 
