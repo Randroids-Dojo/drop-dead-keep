@@ -735,35 +735,139 @@ Derived from PvZ's approach and George Fan's GDC principles:
 - **Fail-safe**: If player does nothing for 15 seconds, re-show the current prompt with a subtle pulse
 - **The lawnmower equivalent**: PvZ has lawnmowers as a last-resort safety net. Our equivalent: the gate has generous HP in early levels (can absorb 10+ zombie hits), so even if some get through, the player doesn't lose on Level 1
 
+### Unlock Reward Screen
+
+After completing each level, if the next level introduces a new ammo type or mechanic, an **unlock reward card** appears (modeled on PvZ's "YOU GOT A NEW PLANT!" screen):
+
+```
+┌──────────────────────────────────────────────┐
+│         YOU UNLOCKED A NEW WEAPON!           │
+│                                              │
+│  ┌─────────────┐  ┌─────────────────────┐   │
+│  │             │  │                     │   │
+│  │  [FIREBALL  │  │  Burns wood bridges │   │
+│  │   ICON]     │  │  faster. Area       │   │
+│  │             │  │  damage over time.  │   │
+│  └─────────────┘  └─────────────────────┘   │
+│                                              │
+│              [ CONTINUE ]                    │
+└──────────────────────────────────────────────┘
+```
+
+**Unlock reward rules:**
+- **One unlock per level** — never overwhelm with multiple new things
+- **Icon + one-line description** — PvZ's "Gives you additional sun" is the gold standard. Ours: "Burns wood bridges faster. Area damage over time."
+- **Tease before reveal** — at the END of the previous level, the new item briefly appears on-screen (e.g., a fireball icon falls from the sky during the victory fanfare), building anticipation before the unlock card
+- **New item is highlighted** at the start of the next level — "Fireballs are extremely powerful against wooden bridges!" (one prompt, then the player is on their own)
+
+**Unlock progression:**
+
+| After Level | Unlock | Card Text |
+|---|---|---|
+| 1-1 | (nothing — first level) | — |
+| 1-2 | Sprinter zombie (Bestiary entry) | "YOU DISCOVERED A NEW ZOMBIE! Sprinter — Fast but fragile. Can leap small gaps." |
+| 1-3 | Engineer zombie (Bestiary entry) | "YOU DISCOVERED A NEW ZOMBIE! Engineer — Rebuilds destroyed bridges. Take them out first!" |
+| 1-4 | Gate Defense mode | "NEW DEFENSE MODE! When zombies reach the wall, drop oil, rocks, and fire from the battlements!" |
+| 1-5 | Fireball ammo | "YOU UNLOCKED A NEW WEAPON! Fireball — Burns wood bridges faster. Area damage over time." |
+| 2-2 | Brute zombie | "YOU DISCOVERED A NEW ZOMBIE! Brute — Tough and heavy. Can bash through damaged bridges." |
+| 2-3 | Plank Carrier zombie | "YOU DISCOVERED A NEW ZOMBIE! Plank Carrier — Drops planks across gaps. Destroy planks with fire!" |
+| 2-5 | Ice Bomb ammo | "YOU UNLOCKED A NEW WEAPON! Ice Bomb — Freezes zombies in place. Frozen bridges shatter easily." |
+| 3-2 | Screecher zombie | "YOU DISCOVERED A NEW ZOMBIE! Screecher — Screams to speed up nearby zombies." |
+| 3-4 | Mega Bomb ammo | "YOU UNLOCKED A NEW WEAPON! Mega Bomb — Massive blast radius. Destroys entire bridge sections." |
+
+### Level Select Screen
+
+The level select screen is the player's home base between levels. Modeled on PvZ's adventure map with world gravestones:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                    DROP DEAD KEEP                        │
+│                                                          │
+│  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐  ┌─────┐          │
+│  │ 1-1 │  │ 1-2 │  │ 1-3 │  │ 1-4 │  │ 1-5 │          │
+│  │ ★★★ │  │ ★★☆ │  │     │  │ 🔒  │  │ 🔒  │          │
+│  │[art]│  │[art]│  │PLAY │  │[sil]│  │[sil]│          │
+│  └─────┘  └─────┘  └─────┘  └─────┘  └─────┘          │
+│                                                          │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐       │
+│  │FOOTHILLS│ │ GORGE   │ │  DARK   │ │THE KEEP │       │
+│  │ (Day)   │ │ (Dusk)  │ │ (Night) │ │ (Dawn)  │       │
+│  │ ★★★★☆  │ │  🔒     │ │  🔒     │ │  🔒     │       │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘       │
+│                                                          │
+│  [ BESTIARY ]  [ LEADERBOARD ]  [ SETTINGS ]            │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Level select features:**
+- **Completed levels** show preview art (thumbnail of the mountain map) + star rating (1-3 stars)
+- **Current level** is enlarged with a "PLAY" button (PvZ highlights the next level)
+- **Locked levels** are silhouetted with a padlock icon — creates curiosity about what's coming
+- **World banners** at bottom show themed sections (Foothills/Gorge/Dark/Keep) — locked worlds are grayed out with padlock
+- **World star total** shown under each banner (e.g., "★★★★☆" = 4 of 5 possible stars earned)
+- **Unlock indicator** on completed levels shows what was earned (ammo icon or zombie portrait with checkmark)
+
+### Pre-Level Zombie Preview
+
+Before each level starts, a brief **zombie preview** shows the horde massing at the base of the mountain (like PvZ showing zombies gathering on the sidewalk):
+
+```
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│    The mountain path, zoomed out...                  │
+│                                                      │
+│    Zombies shuffling into formation at the bottom    │
+│    New zombie types HIGHLIGHTED with a glow          │
+│    Camera slowly pans up to reveal the full path     │
+│                                                      │
+│              "A huge wave of zombies                 │
+│               is approaching!"                       │
+│                                                      │
+│              [ BEGIN LEVEL ]                          │
+└──────────────────────────────────────────────────────┘
+```
+
+This serves two purposes:
+1. **Tension builder** — player sees the scale of what's coming
+2. **Reconnaissance** — player can spot new zombie types and plan accordingly
+
 ### Level-by-Level Mechanic Introduction
 
 Each level introduces **exactly one new concept**. The player masters it before the next is added.
 
-| Level | New Mechanic | What Player Learns | Zombie Roster |
-|-------|-------------|-------------------|---------------|
-| **1-1** | Catapult + Boulder | Drag-to-aim, trajectory preview, release to fire. Destroy a single rope bridge. | 5 Shamblers (single file) |
-| **1-2** | Multiple bridges | Must prioritize which bridge to destroy first. | 8 Shamblers (two bridges) |
-| **1-3** | Sprinters introduced | Fast enemies that can jump small gaps — bridges must be fully destroyed, not just damaged | 6 Shamblers + 3 Sprinters |
-| **1-4** | **Engineers introduced** | THE core mechanic reveal. Engineers rebuild bridges — player must learn to prioritize killing them | 8 Shamblers + 2 Engineers |
-| **1-5** | Gate Defense phase | First time zombies reach the wall. Player learns oil/rocks/fire defense | 12 mixed + 3 Engineers (some will breach) |
-| **2-1** | Fireball ammo | Wood bridges can be burned. Fire creates area denial | 10 Shamblers + 4 Sprinters |
-| **2-2** | Wooden bridges | Stronger bridges that take 2-3 hits. Fireball is more effective | 12 mixed |
-| **2-3** | Brutes introduced | Heavy zombies that can bash weakened structures — must fully destroy, not just damage | 8 mixed + 2 Brutes |
-| **2-4** | Plank Carriers | Zombies that drop planks across gaps. Must destroy planks or kill carriers before they reach gap | 10 mixed + 4 Plank Carriers |
-| **2-5** | Multi-path level | Two approach routes — must split attention between paths | 15 mixed, split across 2 paths |
-| **3-1** | Ice Bomb ammo | Freeze zombies in place, frozen bridges become fragile | 12 mixed |
-| **3-2** | Stone bridges | Very tough bridges, require multiple boulders or Mega Bomb | 15 mixed |
-| **3-3** | Screechers | Speed-buffing zombie. Must be killed quickly or entire wave accelerates | 12 mixed + 2 Screechers |
-| **3-4** | Ladder Zombies | Bypass bridges entirely — create alternate routes up cliff faces | 15 mixed + 3 Ladder Zombies |
-| **3-5** | Mega Bomb ammo | One massive shot — save it for the right moment. Boss-like final wave | 20 mixed horde |
+| Level | New Mechanic | Unlock Reward | What Player Learns | Zombie Roster |
+|-------|-------------|---------------|-------------------|---------------|
+| **1-1** | Catapult + Boulder | — | Drag-to-aim, trajectory preview, release to fire. Destroy a single rope bridge. | 5 Shamblers (single file) |
+| **1-2** | Multiple bridges | Sprinter (Bestiary) | Must prioritize which bridge to destroy first. | 8 Shamblers (two bridges) |
+| **1-3** | Sprinters | Engineer (Bestiary) | Fast enemies that can jump small gaps — bridges must be fully destroyed, not just damaged | 6 Shamblers + 3 Sprinters |
+| **1-4** | **Engineers** | Gate Defense mode | THE core mechanic reveal. Engineers rebuild bridges — player must learn to prioritize killing them | 8 Shamblers + 2 Engineers |
+| **1-5** | Gate Defense phase | Fireball ammo | First time zombies reach the wall. Player learns oil/rocks/fire defense | 12 mixed + 3 Engineers (some will breach) |
+| **2-1** | Fireball ammo | — | Wood bridges can be burned. Fire creates area denial. "Fireballs are extremely powerful against wooden bridges!" | 10 Shamblers + 4 Sprinters |
+| **2-2** | Wooden bridges | Brute (Bestiary) | Stronger bridges that take 2-3 hits. Fireball is more effective | 12 mixed |
+| **2-3** | Brutes | Plank Carrier (Bestiary) | Heavy zombies that can bash weakened structures — must fully destroy, not just damage | 8 mixed + 2 Brutes |
+| **2-4** | Plank Carriers | — | Zombies that drop planks across gaps. Must destroy planks or kill carriers before they reach gap | 10 mixed + 4 Plank Carriers |
+| **2-5** | Multi-path level | Ice Bomb ammo | Two approach routes — must split attention between paths | 15 mixed, split across 2 paths |
+| **3-1** | Ice Bomb ammo | — | Freeze zombies in place, frozen bridges become fragile. "Ice makes bridges shatter in one hit!" | 12 mixed |
+| **3-2** | Stone bridges | Screecher (Bestiary) | Very tough bridges, require multiple boulders or Mega Bomb | 15 mixed |
+| **3-3** | Screechers | — | Speed-buffing zombie. Must be killed quickly or entire wave accelerates | 12 mixed + 2 Screechers |
+| **3-4** | Ladder Zombies | Mega Bomb ammo | Bypass bridges entirely — create alternate routes up cliff faces | 15 mixed + 3 Ladder Zombies |
+| **3-5** | Mega Bomb ammo | (World 3 complete) | One massive shot — save it for the right moment. Boss-like final wave | 20 mixed horde |
 
 ### Pacing Rhythm
 
 Following PvZ's pattern of **introduce → practice → combine → escalate**:
 
 ```
-Level N:   Introduce mechanic in SAFE context (easy wave, few zombies)
-Level N+1: Use same mechanic in HARDER context (more zombies, combined with previous threats)
+Level N:   UNLOCK new thing at end of previous level
+           ↓
+Level N:   START with highlight prompt ("Fireballs are extremely powerful!")
+           ↓
+Level N:   Use new thing in SAFE context (easy wave, few zombies)
+           ↓
+Level N+1: Use same thing in HARDER context (more zombies, combined with previous threats)
+           ↓
+Level N+1: UNLOCK next new thing at end
+           ↓
 Level N+2: Introduce NEXT mechanic (previous is now assumed knowledge)
 ```
 
@@ -773,8 +877,9 @@ Every 5 levels = a "world transition" that changes the visual theme and resets t
 Following PvZ's approach of delaying peripheral mechanics:
 - **Scoring details**: Just show the number going up. Explain combos later
 - **Star ratings**: Appear after level 5, once core loop is mastered
-- **Bestiary**: Unlocks after encountering 3+ zombie types
+- **Bestiary**: Unlocks after encountering 3+ zombie types (after Level 1-3)
 - **Leaderboard**: Available from menu but not pushed until World 2
+- **Level select worlds**: Only show the current world's levels at first. Locked worlds appear as silhouettes
 - **Advanced ammo combos** (tar + fire, ice + boulder): Discovered organically, never explicitly tutorialized
 
 ---
