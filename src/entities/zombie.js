@@ -1,5 +1,9 @@
 // Drop Dead Keep — Zombie Entities
 
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSprite, setupPixelCanvas } from '../sprites/sprite-renderer.js';
+import { drawPixelBar } from '../sprites/pixel-font.js';
+
 export const ZombieType = {
   SHAMBLER: 'shambler',
   SPRINTER: 'sprinter',
@@ -14,6 +18,15 @@ const ZOMBIE_STATS = {
   plank_carrier: { hp: 2, speed: 25, damage: 1, color: '#4CAF50', size: 14, name: 'Plank Carrier' },
   engineer: { hp: 2, speed: 28, damage: 1, color: '#4CAF50', size: 12, name: 'Engineer' },
   brute: { hp: 5, speed: 20, damage: 4, color: '#2E7D32', size: 20, name: 'Brute' },
+};
+
+// Map zombie types to sprite keys
+const SPRITE_KEY_MAP = {
+  shambler: 'shambler',
+  sprinter: 'sprinter',
+  brute: 'brute',
+  engineer: 'engineer',
+  plank_carrier: 'carrier',
 };
 
 export class Zombie {
@@ -165,6 +178,12 @@ export class Zombie {
   draw(ctx) {
     if (!this.alive && !this.falling) return;
 
+    const sprites = getSprites();
+    const spriteKey = SPRITE_KEY_MAP[this.type];
+    const spriteFrames = sprites.zombie[spriteKey];
+    const frameIndex = Math.floor(this.walkCycle * 2) % 2;
+    const spriteFrame = spriteFrames[frameIndex];
+
     const s = this.size;
     const x = this.x;
     const y = this.y;
@@ -172,101 +191,52 @@ export class Zombie {
     // Walk bob
     const bob = this.falling ? 0 : Math.sin(this.walkCycle) * 2;
 
-    ctx.save();
+    // Sprite scale: size / 5 so sprite scales with perspective
+    const spriteScale = s / 5;
 
-    // Flash white on damage
-    if (this.flashTimer > 0) {
-      ctx.globalAlpha = 0.5 + Math.sin(this.flashTimer * 30) * 0.5;
-    }
+    // Determine draw options
+    const opts = {
+      flipX: !this.facingRight,
+    };
 
-    // Falling rotation
+    // Falling: rotation and fade
     if (this.falling) {
-      ctx.translate(x, y);
-      ctx.rotate(this.fallVelocity * 0.003);
-      ctx.translate(-x, -y);
-      ctx.globalAlpha = Math.max(0, 1 - this.fallVelocity / 300);
+      opts.rotation = this.fallVelocity * 0.003;
+      opts.alpha = Math.max(0, 1 - this.fallVelocity / 300);
     }
 
-    // Body
-    ctx.fillStyle = this.flashTimer > 0 ? '#fff' : this.color;
-    ctx.beginPath();
-    ctx.ellipse(x, y + bob, s * 0.8, s, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.save();
+    setupPixelCanvas(ctx);
 
-    // Outline
-    ctx.strokeStyle = '#1B5E20';
-    ctx.lineWidth = Math.max(1, s * 0.15);
-    ctx.stroke();
+    // Draw the sprite
+    drawSprite(ctx, spriteFrame, x, y + bob, spriteScale, opts);
 
-    // Eyes
-    const eyeSize = Math.max(1.5, s * 0.2);
-    const eyeOffsetX = s * 0.25;
-    const eyeY = y + bob - s * 0.2;
-    ctx.fillStyle = '#fff';
-    ctx.beginPath();
-    ctx.arc(x - eyeOffsetX, eyeY, eyeSize, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + eyeOffsetX, eyeY, eyeSize, 0, Math.PI * 2);
-    ctx.fill();
+    // Flash white on damage: overlay a white rectangle over the sprite area
+    if (this.flashTimer > 0) {
+      const flashAlpha = 0.5 + Math.sin(this.flashTimer * 30) * 0.5;
+      const w = spriteFrame.width * spriteScale;
+      const h = spriteFrame.height * spriteScale;
+      const drawX = Math.round(x - w / 2);
+      const drawY = Math.round(y + bob - h);
 
-    // Pupils
-    ctx.fillStyle = '#000';
-    const pupilOff = this.facingRight ? 1 : -1;
-    ctx.beginPath();
-    ctx.arc(x - eyeOffsetX + pupilOff, eyeY, eyeSize * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x + eyeOffsetX + pupilOff, eyeY, eyeSize * 0.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Type-specific visuals
-    if (this.type === ZombieType.SPRINTER) {
-      // Speed lines
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < 3; i++) {
-        const ly = y + bob - s + i * s * 0.5;
-        const dir = this.facingRight ? -1 : 1;
-        ctx.beginPath();
-        ctx.moveTo(x + dir * s, ly);
-        ctx.lineTo(x + dir * (s + 8), ly);
-        ctx.stroke();
-      }
-    } else if (this.type === ZombieType.BRUTE) {
-      // Bigger, angrier face
-      ctx.fillStyle = '#1B5E20';
-      ctx.fillRect(x - s * 0.4, y + bob + s * 0.1, s * 0.8, s * 0.15);
-    } else if (this.type === ZombieType.ENGINEER) {
-      // Hard hat
-      ctx.fillStyle = '#FFC107';
-      ctx.fillRect(x - s * 0.5, y + bob - s * 1.1, s, s * 0.3);
-      ctx.strokeStyle = '#F57F17';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(x - s * 0.5, y + bob - s * 1.1, s, s * 0.3);
-    } else if (this.type === ZombieType.PLANK_CARRIER && this.carriedPlanks) {
-      // Planks on back
-      ctx.fillStyle = '#8B6914';
       ctx.save();
-      ctx.translate(x, y + bob);
-      ctx.rotate(-0.2);
-      ctx.fillRect(-2, -s * 1.5, 4, s * 1.2);
-      ctx.fillRect(2, -s * 1.4, 4, s * 1.1);
+      ctx.globalAlpha = flashAlpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(drawX, drawY, Math.round(w), Math.round(h));
       ctx.restore();
     }
 
-    // Build progress bar
+    // Build progress bar (pixel-perfect)
     if (this.isBuilding) {
-      const barW = s * 2;
-      const barH = 3;
-      const barY = y + bob - s * 1.5;
+      const barW = Math.round(s * 2);
+      const barH = 4;
+      const barX = Math.round(x - barW / 2);
+      const barY = Math.round(y + bob - spriteFrame.height * spriteScale - 4);
       const buildTime = this.type === ZombieType.BRUTE
         ? this.bruteRebuildTime
         : (this.targetBridge ? this.targetBridge.rebuildTime : 5);
-      ctx.fillStyle = '#333';
-      ctx.fillRect(x - barW / 2, barY, barW, barH);
-      ctx.fillStyle = this.type === ZombieType.BRUTE ? '#c0392b' : '#e67e22';
-      ctx.fillRect(x - barW / 2, barY, barW * (this.buildProgress / buildTime), barH);
+      const fillColor = this.type === ZombieType.BRUTE ? '#c0392b' : '#e67e22';
+      drawPixelBar(ctx, barX, barY, barW, barH, this.buildProgress, buildTime, { fillColor });
     }
 
     ctx.restore();

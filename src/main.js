@@ -18,10 +18,15 @@ import { UpdateBanner } from './ui/update-banner.js';
 import { PauseFab } from './ui/pause-fab.js';
 import { FeedbackFab } from './ui/feedback-fab.js';
 import { LEVELS } from './data/levels.js';
+import { setupPixelCanvas } from './sprites/sprite-renderer.js';
+import { getSprites } from './sprites/pixel-data.js';
 
 // --- Setup ---
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+
+// Initialize pixel art sprite cache early
+getSprites();
 
 // Virtual game resolution — all game logic uses this coordinate space
 const GAME_SIZE = 800;
@@ -459,6 +464,9 @@ function handleAmmoBarClick(mx, my) {
 
 // --- Main Draw ---
 function draw() {
+  // Disable image smoothing for pixel-perfect rendering
+  setupPixelCanvas(ctx);
+
   // Clear and fill letterbox areas with sky color
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -467,6 +475,7 @@ function draw() {
   ctx.save();
   ctx.translate(gameOffsetX, gameOffsetY);
   ctx.scale(gameScale, gameScale);
+  ctx.imageSmoothingEnabled = false;
 
   switch (game.state) {
     case GameState.TITLE:

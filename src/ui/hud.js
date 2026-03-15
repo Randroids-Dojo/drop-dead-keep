@@ -1,4 +1,6 @@
-// Drop Dead Keep — In-Game HUD Overlay
+// Drop Dead Keep — In-Game HUD Overlay (Pixel Art)
+
+import { drawPixelText, measurePixelText, pixelTextHeight, drawPixelBox, drawPixelBar } from '../sprites/pixel-font.js';
 
 export class HUD {
   constructor() {
@@ -67,17 +69,20 @@ export class HUD {
     const { waveSystem, scoringSystem } = gameState;
 
     // Score display (top-left)
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 18px monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(`SCORE: ${scoringSystem.score}`, 20, 30);
+    drawPixelText(ctx, `SCORE: ${scoringSystem.score}`, 20, 14, {
+      color: '#ffffff',
+      size: 3,
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
     // Wave counter (top-center)
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillStyle = '#bdc3c7';
     const waveText = `WAVE ${waveSystem.getCurrentWaveNumber()} / ${waveSystem.getTotalWaves()}`;
-    ctx.fillText(waveText, canvasWidth / 2, 25);
+    drawPixelText(ctx, waveText, canvasWidth / 2, 12, {
+      color: '#bdc3c7',
+      size: 2,
+      align: 'center',
+    });
 
     // Gate health (top-right)
     this.drawGateHealth(ctx, canvasWidth, waveSystem);
@@ -99,10 +104,11 @@ export class HUD {
 
     // Instruction text at very bottom (only during active gameplay)
     if (waveSystem.waveActive) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.font = '12px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('DRAG FROM CATAPULT TO AIM : RELEASE TO FIRE', canvasWidth / 2, canvasHeight - 8);
+      drawPixelText(ctx, 'DRAG FROM CATAPULT TO AIM : RELEASE TO FIRE', canvasWidth / 2, canvasHeight - 14, {
+        color: 'rgba(255, 255, 255, 0.4)',
+        size: 1,
+        align: 'center',
+      });
     }
 
     // Score popups
@@ -117,36 +123,37 @@ export class HUD {
     const pct = waveSystem.getGateHpPercent();
 
     // Label
-    ctx.fillStyle = '#bdc3c7';
-    ctx.font = 'bold 11px monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText('GATE', barX - 5, barY + 11);
-
-    // Background
-    ctx.fillStyle = '#333';
-    ctx.fillRect(barX, barY, barW, barH);
+    drawPixelText(ctx, 'GATE', barX - 8, barY + 1, {
+      color: '#bdc3c7',
+      size: 1,
+      align: 'right',
+    });
 
     // Health bar
     const hpColor = pct > 0.6 ? '#2ecc71' : pct > 0.3 ? '#f1c40f' : '#e74c3c';
-    ctx.fillStyle = hpColor;
-    ctx.fillRect(barX, barY, barW * pct, barH);
+    drawPixelBar(ctx, barX, barY, barW, barH, pct * 100, 100, {
+      bg: '#333333',
+      border: '#555555',
+      fillColor: hpColor,
+    });
 
-    // Border
-    ctx.strokeStyle = '#555';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(barX, barY, barW, barH);
-
-    // Percentage text
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 10px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${Math.ceil(pct * 100)}%`, barX + barW / 2, barY + 11);
+    // Percentage text centered on bar
+    drawPixelText(ctx, `${Math.ceil(pct * 100)}%`, barX + barW / 2, barY + 3, {
+      color: '#ffffff',
+      size: 1,
+      align: 'center',
+    });
 
     // Flash red on low health
     if (pct <= 0.3 && pct > 0) {
       const flash = Math.sin(Date.now() * 0.01) * 0.3;
-      ctx.fillStyle = `rgba(231, 76, 60, ${flash})`;
-      ctx.fillRect(barX, barY, barW, barH);
+      if (flash > 0) {
+        ctx.save();
+        ctx.globalAlpha = flash;
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(barX, barY, barW, barH);
+        ctx.restore();
+      }
     }
   }
 
@@ -157,26 +164,27 @@ export class HUD {
     ctx.save();
     ctx.globalAlpha = alpha * pulse;
 
-    // Background
     const text = this.tutorialMessage;
-    ctx.font = 'bold 16px monospace';
-    const textWidth = ctx.measureText(text).width;
-    const padding = 20;
-    const boxW = textWidth + padding * 2;
-    const boxH = 36;
+    const textSize = 2;
+    const textW = measurePixelText(text, textSize);
+    const textH = pixelTextHeight(textSize);
+    const padding = 16;
+    const boxW = textW + padding * 2;
+    const boxH = textH + padding * 2;
     const boxX = canvasWidth / 2 - boxW / 2;
     const boxY = canvasHeight - 100;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(boxX, boxY, boxW, boxH);
-    ctx.strokeStyle = '#e67e22';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(boxX, boxY, boxW, boxH);
+    drawPixelBox(ctx, boxX, boxY, boxW, boxH, {
+      bg: 'rgba(0, 0, 0, 0.7)',
+      border: '#e67e22',
+      borderWidth: 2,
+    });
 
-    // Text
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.fillText(text, canvasWidth / 2, boxY + 23);
+    drawPixelText(ctx, text, canvasWidth / 2, boxY + padding, {
+      color: '#ffffff',
+      size: textSize,
+      align: 'center',
+    });
 
     ctx.restore();
   }
@@ -197,22 +205,27 @@ export class HUD {
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    // Banner background
-    const bannerH = 60;
+    const textSize = 4;
+    const textH = pixelTextHeight(textSize);
+    const bannerPadding = 16;
+    const bannerH = textH + bannerPadding * 2 + 6; // 6 for accent lines
     const bannerY = canvasHeight / 2 - bannerH / 2 - 40;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillRect(xOffset, bannerY, canvasWidth, bannerH);
 
-    // Red accent lines
-    ctx.fillStyle = '#c0392b';
-    ctx.fillRect(xOffset, bannerY, canvasWidth, 3);
-    ctx.fillRect(xOffset, bannerY + bannerH - 3, canvasWidth, 3);
+    // Banner background
+    drawPixelBox(ctx, xOffset, bannerY, canvasWidth, bannerH, {
+      bg: 'rgba(0, 0, 0, 0.8)',
+      border: '#c0392b',
+      borderWidth: 3,
+    });
 
     // Text
-    ctx.fillStyle = '#e74c3c';
-    ctx.font = 'bold 28px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.banner, canvasWidth / 2 + xOffset, bannerY + 38);
+    drawPixelText(ctx, this.banner, canvasWidth / 2 + xOffset, bannerY + bannerPadding + 3, {
+      color: '#e74c3c',
+      size: textSize,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
     ctx.restore();
   }
@@ -222,15 +235,27 @@ export class HUD {
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    const y = canvasHeight - 140;
-    ctx.font = '13px monospace';
-    const textW = ctx.measureText(this.failureHint).width;
-    ctx.fillRect(canvasWidth / 2 - textW / 2 - 12, y - 12, textW + 24, 28);
+    const text = this.failureHint;
+    const textSize = 2;
+    const textW = measurePixelText(text, textSize);
+    const textH = pixelTextHeight(textSize);
+    const padding = 12;
+    const boxW = textW + padding * 2;
+    const boxH = textH + padding * 2;
+    const boxX = canvasWidth / 2 - boxW / 2;
+    const boxY = canvasHeight - 148;
 
-    ctx.fillStyle = '#f1c40f';
-    ctx.textAlign = 'center';
-    ctx.fillText(this.failureHint, canvasWidth / 2, y + 5);
+    drawPixelBox(ctx, boxX, boxY, boxW, boxH, {
+      bg: 'rgba(0, 0, 0, 0.6)',
+      border: '#f1c40f',
+      borderWidth: 2,
+    });
+
+    drawPixelText(ctx, text, canvasWidth / 2, boxY + padding, {
+      color: '#f1c40f',
+      size: textSize,
+      align: 'center',
+    });
 
     ctx.restore();
   }

@@ -1,5 +1,7 @@
 // Drop Dead Keep — Scoring System
 
+import { drawPixelText } from '../sprites/pixel-font.js';
+
 export class ScoringSystem {
   constructor() {
     this.score = 0;
@@ -104,12 +106,15 @@ export class ScoringSystem {
   draw(ctx) {
     for (const popup of this.popups) {
       const alpha = 1 - popup.age / popup.lifetime;
-      ctx.fillStyle = popup.color;
+      ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.font = 'bold 14px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(popup.text, popup.x, popup.y);
+      drawPixelText(ctx, popup.text, popup.x, popup.y, {
+        color: popup.color,
+        size: 2,
+        align: 'center',
+        shadow: '#1a1a1a',
+      });
+      ctx.restore();
     }
-    ctx.globalAlpha = 1;
   }
 }

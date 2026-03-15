@@ -70,9 +70,12 @@ export class ParticleSystem {
   draw(ctx) {
     for (const p of this.particles) {
       const alpha = 1 - p.life / p.maxLife;
+      const quantizedSize = Math.max(2, Math.round(p.size / 2) * 2);
+      const px = Math.round(p.x) - quantizedSize / 2;
+      const py = Math.round(p.y) - quantizedSize / 2;
       ctx.globalAlpha = alpha;
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      ctx.fillRect(px, py, quantizedSize, quantizedSize);
     }
     ctx.globalAlpha = 1;
   }
