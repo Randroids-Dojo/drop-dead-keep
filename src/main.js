@@ -14,6 +14,9 @@ import { AudioEngine } from './audio/audio.js';
 import { HUD } from './ui/hud.js';
 import { MenuSystem } from './ui/menus.js';
 import { InputHandler } from './ui/controls.js';
+import { UpdateBanner } from './ui/update-banner.js';
+import { PauseFab } from './ui/pause-fab.js';
+import { FeedbackFab } from './ui/feedback-fab.js';
 import { LEVELS } from './data/levels.js';
 
 // --- Setup ---
@@ -38,6 +41,18 @@ const audio = new AudioEngine();
 const hud = new HUD();
 const menus = new MenuSystem();
 const input = new InputHandler(canvas);
+const updateBanner = new UpdateBanner();
+const pauseFab = new PauseFab();
+const feedbackFab = new FeedbackFab();
+
+// Initialize HTML overlays
+updateBanner.init();
+feedbackFab.init();
+pauseFab.init(() => {
+  if (game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR) {
+    game.setState(GameState.PAUSED);
+  }
+});
 
 // --- Game Objects ---
 let gameMap = null;
@@ -249,6 +264,12 @@ function update(time) {
     case GameState.PAUSED:
       break;
   }
+
+  // Update HTML overlay visibility
+  const isActive = game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR;
+  const isPaused = game.state === GameState.PAUSED;
+  pauseFab.setVisible(isActive && !isPaused);
+  feedbackFab.setVisible(isPaused);
 }
 
 function updatePlaying(dt) {
