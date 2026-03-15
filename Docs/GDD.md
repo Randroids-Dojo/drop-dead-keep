@@ -757,6 +757,73 @@ Reactive hints that appear ONLY when the player makes a specific mistake. Never 
 - Never shown on replayed levels (player already knows)
 - Tone is helpful, never punishing — "Try X!" not "You failed because..."
 
+### Defeat Screen
+
+When the gate falls, a **dramatic defeat screen** appears (inspired by Angry Birds' menacing pig gloat screen):
+
+```
+┌──────────────────────────────────────────────────────┐
+│                                                      │
+│     [Dark red/orange radial burst background]        │
+│                                                      │
+│        ╔══════════════════════════╗                   │
+│        ║   ZOMBIES  clustered    ║                   │
+│        ║   around broken gate,   ║                   │
+│        ║   grinning smugly at    ║                   │
+│        ║   the camera            ║                   │
+│        ╚══════════════════════════╝                   │
+│                                                      │
+│           THE GATE HAS FALLEN                        │
+│                                                      │
+│              [ RETRY ]                               │
+│                                                      │
+│      (back arrow)          (level select)             │
+└──────────────────────────────────────────────────────┘
+```
+
+**Defeat screen design:**
+- **Enemies gloat** — zombies cluster around the broken gate, looking directly at the camera with smug grins. Makes the player want revenge
+- **Dramatic lighting** — dark red/orange radial burst, ominous tone
+- **No punishment** — retry is free and instant (unlike Angry Birds' token cost). We want players to immediately try again, not feel penalized
+- **Quick stats** — brief summary: "Wave 3 of 5 • 12 zombies stopped • 3 breached"
+- **Failure coaching** — if this is the player's first death on this level, a small tip appears below the retry button: "Tip: Destroy the lower bridges first to thin the horde early"
+
+### Ammo Key Unlock System (Player Choice)
+
+Inspired by Angry Birds 2's "Bird key found! Use it to release any bird!" system — at certain milestones, the player earns an **Ammo Key** and CHOOSES which weapon to unlock next.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                AMMO KEY FOUND!                           │
+│          Choose your next weapon!                        │
+│                                                          │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐            │
+│  │FIREBALL│ │ICE BOMB│ │  MEGA  │ │  TAR   │            │
+│  │  🔥    │ │  ❄️    │ │  BOMB  │ │  POT   │            │
+│  │        │ │  🔒    │ │  🔒   │ │  🔒   │            │
+│  │Rec'd!  │ │        │ │        │ │        │            │
+│  └────────┘ └────────┘ └────────┘ └────────┘            │
+│                                                          │
+│  Burns wood    Freezes     Massive     Slows +           │
+│  bridges.      zombies.    blast.      flammable.        │
+│  Area damage.  Shatters    Destroys    Combo with        │
+│               bridges.    sections.   fire.              │
+│                                                          │
+│              [ UNLOCK FIREBALL ]                         │
+└──────────────────────────────────────────────────────────┘
+```
+
+**Ammo Key rules:**
+- **Earned at World milestones** — completing World 1 (Level 1-5), midway through World 2 (Level 2-3), completing World 2 (Level 2-5), etc.
+- **Player chooses** which ammo to unlock — agency and replayability
+- **"Recommended!"** tag on the most useful option for the upcoming levels — guides without forcing
+- **Locked ammo shown in cages/cases** — visual anticipation (like AB2's caged birds)
+- **Info button** on each option — tap to preview the ammo's effect in a short animation
+- **Choice is permanent** for that playthrough — other ammo can be unlocked with later keys. Encourages replaying the game with different unlock orders
+- **All ammo eventually unlockable** — no FOMO, just ordering preference
+
+This gives players meaningful choice while maintaining the drip-feed pacing of PvZ.
+
 ### Level 1-2: Second Level (Scaled Up + New Mechanic)
 
 Level 2 follows PvZ's exact pattern: bigger map, new tool introduced with guided prompts, then player is on their own. In PvZ, Level 2 jumps from 1 lane to 3 and introduces sunflowers. Our Level 1-2 jumps from 1 bridge to 2 bridges.
