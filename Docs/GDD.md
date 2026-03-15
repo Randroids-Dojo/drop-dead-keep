@@ -312,15 +312,15 @@ Zombies approach in waves with escalating difficulty. Each type has distinct beh
 #### Brute
 | Stat | Rating | | |
 |------|--------|-|-|
-| HP | 5/6 | **Rarity** | Uncommon |
-| SPD | 1/6 | **Unlock** | Level 2-3 |
+| HP | 5/6 | **Rarity** | Common (1 per wave minimum) |
+| SPD | 1/6 | **Unlock** | Level 1-1 (core mechanic) |
 | DMG | 4/6 | **Visual** | Massive, hulking green zombie. Twice the size of Shamblers. Visible muscles, heavy jaw |
 | ARM | 3/6 | | |
 
-**Behavior:** Slow, extremely tough. Walks with ground-shaking footsteps (subtle screen vibration). Other zombies cluster behind Brutes, using them as moving shields.
+**Behavior:** Slow, extremely tough. Walks with ground-shaking footsteps (subtle screen vibration). Other zombies cluster behind Brutes, using them as moving shields. **Critically, Brutes can rapidly repair destroyed bridges** — they stop at a destroyed bridge and rebuild it in just 3 seconds (faster than Engineers), restoring it to 40% HP. This is the core mechanic that prevents "destroy bridge once, win forever."
 
 **World interactions:**
-- **Destroyed bridge** → Falls in like everyone else. BUT: due to mass, the impact at the bottom creates a larger rubble pile, making it easier for later zombies to cross the debris
+- **Destroyed bridge** → Stops and **rapidly repairs** the bridge in 3 seconds, restoring it to 40% HP. A red progress bar shows repair progress. Once repaired, the Brute and all following zombies can cross. The player must kill the Brute (multiple hits required) before it finishes repairing, or destroy the bridge again after repair
 - **Damaged bridge** → Can **bash through weakened bridges** (< 50% HP) instead of crossing normally. The bridge collapses under their weight but they survive and continue walking on the debris. This means a half-destroyed bridge is WORSE than an intact one when a Brute approaches — they'll destroy it AND create a rubble crossing
 - **Intact bridge** → Walks across normally. Bridge shakes and loses 10% HP from the weight alone
 - **Rubble pile** → Walks straight through, compacting the rubble into a more stable crossing for following zombies
@@ -331,7 +331,7 @@ Zombies approach in waves with escalating difficulty. Each type has distinct beh
 - **Fireball** → Effective: area burn damage stacks against their slow movement
 - **At the gate** → Deals massive gate damage per hit (4/6). Two Brutes at the gate can end a level fast
 
-**Why they matter:** Forces strategic thinking about bridge damage. A half-destroyed bridge + incoming Brute = worse outcome than either a fully intact or fully destroyed bridge. Players learn to commit fully to bridge destruction.
+**Why they matter:** Brutes are the backbone of every wave. Without them, a single bridge destruction trivializes the level. Every wave includes at least one Brute, forcing the player to constantly manage bridge state — destroy the bridge, then prioritize killing the incoming Brute before it repairs. This creates the core tension loop: destroy bridge → spot the Brute → spend ammo killing it (5 HP = multiple shots) → re-destroy bridge if needed. Players must budget ammo between bridge destruction and Brute elimination.
 
 ---
 
@@ -590,7 +590,7 @@ Quick reference for how each zombie type interacts with key game elements:
 |--------|-----------------|----------------|-------------|-----|------|-----|---------|-------------|
 | **Shambler** | Falls in | Crosses slowly | Can cross | Slides off | Burns | Slowed 50% | 1-hit kill | Any bridge destruction |
 | **Sprinter** | Jumps small gaps | Runs across | Jumps over | Slides far off | Burns | Slowed to Shambler speed | Hard to hit | Tar + bridge destruction |
-| **Brute** | Falls in (big rubble) | Bashes through if <50% | Compacts it | Barely affected | Burns slowly | Slowed 75% | 2-3 hits, knockback | Full bridge destruction + fire |
+| **Brute** | **Repairs it! (3s, 40% HP)** | Bashes through if <50% | Compacts it | Barely affected | Burns slowly | Slowed 75% | 2-3 hits, knockback | Kill before repair completes |
 | **Screecher** | Falls in | Crosses | Crosses | Shatters nearby ice | Burns | Slowed | 1-2 hits | Splash damage into pack |
 | **Engineer** | Repairs it! | Repairs it! | Ignores | Frozen, paused | Panics, dies | Slowed | 1-2 hits | Snipe while repairing |
 | **Plank Carrier** | Drops planks across | Crosses | Crosses | Planks slippery | Planks burn! | Slowed | 1 hit | Fire ammo |
@@ -701,11 +701,11 @@ NEXT WAVE
 
 | Wave | Zombies | Composition |
 |------|---------|-------------|
-| 1 | 8 | 8 Shamblers — learn the basics |
-| 2 | 12 | 10 Shamblers + 2 Sprinters — speed pressure |
-| 3 | 15 | 8 Shamblers + 4 Sprinters + 3 Engineers — **builders introduced** |
-| 4 | 20 | 10 Shamblers + 4 Sprinters + 4 Engineers + 2 Plank Carriers |
-| 5 (Final) | 25 | Mixed horde + 1 Brute + 2 Engineers + Shield Bearer |
+| 1 | 8 | 5 Shamblers + 2 Sprinters + **1 Brute** — Brute forces bridge management from the start |
+| 2 | 11 | 6 Shamblers + 2 Sprinters + 2 Engineers + **1 Brute** — builders + muscle |
+| 3 | 12 | 6 Shamblers + 2 Plank Carriers + 2 Engineers + **1 Brute** + 1 Sprinter |
+| 4 | 16 | 8 Shamblers + 3 Sprinters + 2 Engineers + 2 Plank Carriers + **1 Brute** |
+| 5 (Final) | 21 | 10 Shamblers + 4 Sprinters + 3 Engineers + 2 Plank Carriers + **2 Brutes** |
 
 ### Difficulty Scaling
 - **More Zombies** per wave
@@ -722,9 +722,9 @@ NEXT WAVE
 ### World 1: The Foothills (Levels 1-5)
 - **Theme**: Grassy cliffs, wooden bridges, clear skies
 - **Bridges**: Rope and wooden only
-- **Enemies**: Shamblers, Sprinters, Engineers
+- **Enemies**: Shamblers, Sprinters, Brutes (every wave), Engineers (from 1-4)
 - **Ammo**: Boulders only (Fireball unlocked at Level 1-5)
-- **Teaching**: Core loop — aim, fire, destroy, survive
+- **Teaching**: Core loop — aim, fire, destroy bridge, kill the Brute before it repairs, survive
 
 ### World 2: The Gorge (Levels 6-10)
 - **Theme**: Deep canyon, rushing river below, stone bridges
@@ -1364,7 +1364,7 @@ After completing each level, if the next level introduces a new ammo type or mec
 | 1-3 | Engineer zombie (Bestiary entry) | "YOU DISCOVERED A NEW ZOMBIE! Engineer — Rebuilds destroyed bridges. Take them out first!" |
 | 1-4 | Gate Defense mode | "NEW DEFENSE MODE! When zombies reach the wall, drop oil, rocks, and fire from the battlements!" |
 | 1-5 | Fireball ammo | "YOU UNLOCKED A NEW WEAPON! Fireball — Burns wood bridges faster. Area damage over time." |
-| 2-2 | Brute zombie | "YOU DISCOVERED A NEW ZOMBIE! Brute — Tough and heavy. Can bash through damaged bridges." |
+| 2-2 | Wooden bridges | "NEW BRIDGE TYPE! Wooden bridges are tougher — they take more hits to destroy." |
 | 2-3 | Plank Carrier zombie | "YOU DISCOVERED A NEW ZOMBIE! Plank Carrier — Drops planks across gaps. Destroy planks with fire!" |
 | 2-5 | Ice Bomb ammo | "YOU UNLOCKED A NEW WEAPON! Ice Bomb — Freezes zombies in place. Frozen bridges shatter easily." |
 | 3-2 | Screecher zombie | "YOU DISCOVERED A NEW ZOMBIE! Screecher — Screams to speed up nearby zombies." |
@@ -1438,8 +1438,8 @@ Each level introduces **exactly one new concept**. The player masters it before 
 | **1-4** | **Engineers** | Gate Defense mode | THE core mechanic reveal. Engineers rebuild bridges — player must learn to prioritize killing them | 8 Shamblers + 2 Engineers |
 | **1-5** | Gate Defense phase | Fireball ammo | First time zombies reach the wall. Player learns oil/rocks/fire defense | 12 mixed + 3 Engineers (some will breach) |
 | **2-1** | Fireball ammo | — | Wood bridges can be burned. Fire creates area denial. "Fireballs are extremely powerful against wooden bridges!" | 10 Shamblers + 4 Sprinters |
-| **2-2** | Wooden bridges | Brute (Bestiary) | Stronger bridges that take 2-3 hits. Fireball is more effective | 12 mixed |
-| **2-3** | Brutes | Plank Carrier (Bestiary) | Heavy zombies that can bash weakened structures — must fully destroy, not just damage | 8 mixed + 2 Brutes |
+| **2-2** | Wooden bridges | — | Stronger bridges that take 2-3 hits. Fireball is more effective | 12 mixed |
+| **2-3** | Multiple Brutes | Plank Carrier (Bestiary) | Multiple Brutes per wave — must prioritize which to kill first | 8 mixed + 3 Brutes |
 | **2-4** | Plank Carriers | — | Zombies that drop planks across gaps. Must destroy planks or kill carriers before they reach gap | 10 mixed + 4 Plank Carriers |
 | **2-5** | Multi-path level | Ice Bomb ammo | Two approach routes — must split attention between paths | 15 mixed, split across 2 paths |
 | **3-1** | Ice Bomb ammo | — | Freeze zombies in place, frozen bridges become fragile. "Ice makes bridges shatter in one hit!" | 12 mixed |
