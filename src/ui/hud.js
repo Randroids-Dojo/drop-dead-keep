@@ -1,6 +1,6 @@
 // Drop Dead Keep — In-Game HUD Overlay (Pixel Art)
 
-import { drawPixelText, measurePixelText, pixelTextHeight, drawPixelBox, drawPixelBar, drawPixelButton } from '../sprites/pixel-font.js';
+import { drawPixelText, measurePixelText, pixelTextHeight, drawPixelBox, drawPixelBar } from '../sprites/pixel-font.js';
 import { getSprites } from '../sprites/pixel-data.js';
 import { drawSpriteAt } from '../sprites/sprite-renderer.js';
 import { DefenseItem } from '../systems/gate-defense.js';

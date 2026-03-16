@@ -429,7 +429,7 @@ function updateGateDefense(dt) {
   gateDefense.update(dt, waveSystem);
 
   // Apply rock impacts
-  const kills = gateDefense.applyRockImpact(waveSystem);
+  const kills = gateDefense.applyRockImpacts(waveSystem);
   if (kills > 0) {
     audio.play('rock_drop');
     camera.shake(4);
@@ -480,14 +480,14 @@ function updateGateDefense(dt) {
   // Check game over
   if (waveSystem.isGameOver()) {
     audio.play('gate_alarm');
-    gateDefense.active = false;
+    gateDefense.deactivate(waveSystem);
     game.setState(GameState.GAME_OVER);
     return;
   }
 
   // Check if hold timer completed — zombies retreat, return to slingshot
   if (gateDefense.isHoldComplete()) {
-    gateDefense.active = false;
+    gateDefense.deactivate(waveSystem);
     audio.play('wave_clear');
     hud.showBanner('GATE HELD!', 2);
 
@@ -502,7 +502,7 @@ function updateGateDefense(dt) {
   // Also end gate defense if wave completes while defending
   if (waveSystem.waveComplete) {
     waveSystem.waveComplete = false;
-    gateDefense.active = false;
+    gateDefense.deactivate(waveSystem);
     if (waveSystem.allWavesComplete) {
       audio.play('wave_clear');
       completeLevelScreen();
@@ -517,11 +517,7 @@ function updateGateDefense(dt) {
 
 function screenToGateDefenseCoords(screenX, screenY) {
   // Reverse the zoom transform applied in gate defense drawing
-  const eased = gateDefense.easeInOutCubic(gateDefense.zoomProgress);
-  const bounds = gateDefense.getViewBounds(GAME_SIZE, gameMap.castleY);
-  const zoom = 1 + eased * 1.2;
-  const panY = eased * (bounds.centerY - GAME_SIZE / 2);
-
+  const { zoom, panY } = gateDefense.getZoomTransform(GAME_SIZE, gameMap.castleY);
   const cx = GAME_SIZE / 2;
   const cy = GAME_SIZE / 2;
   const x = (screenX - cx) / zoom + cx;
@@ -696,10 +692,7 @@ function drawGameplay() {
 }
 
 function drawGateDefenseView() {
-  const eased = gateDefense.easeInOutCubic(gateDefense.zoomProgress);
-  const bounds = gateDefense.getViewBounds(GAME_SIZE, gameMap.castleY);
-  const zoom = 1 + eased * 1.2;
-  const panY = eased * (bounds.centerY - GAME_SIZE / 2);
+  const { zoom, panY } = gateDefense.getZoomTransform(GAME_SIZE, gameMap.castleY);
 
   ctx.save();
 
@@ -797,7 +790,7 @@ function handleMenuInput() {
 
     case GameState.PAUSED:
       if (clicked === 'resume') {
-        game.setState(game.prevState === GameState.GATE_DEFENSE ? GameState.GATE_DEFENSE : GameState.PLAYING);
+        game.setState(game.prevState || GameState.PLAYING);
       } else if (clicked === 'levels') {
         game.setState(GameState.LEVEL_SELECT);
       }

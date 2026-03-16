@@ -1,11 +1,17 @@
 // Drop Dead Keep — Gate Defense System
 // When zombies reach the wall, player drops oil, rocks, and fire from the battlements
 
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSpriteAt } from '../sprites/sprite-renderer.js';
+
 export const DefenseItem = {
   OIL: 'oil',
   ROCKS: 'rocks',
   FIRE: 'fire',
 };
+
+// Explicit priority order for auto-switching when current item runs out
+const ITEM_PRIORITY = [DefenseItem.ROCKS, DefenseItem.OIL, DefenseItem.FIRE];
 
 const DEFENSE_STATS = {
   oil: { damage: 0, slowFactor: 0.3, radius: 50, duration: 5, color: '#3498db', name: 'OIL' },
@@ -30,14 +36,11 @@ export class GateDefenseSystem {
     // Active effects on the ground (oil slicks, fires)
     this.activeEffects = [];
 
-    // Zombies visible at the gate (subset managed by wave system)
-    this.gateZombies = [];
-
-    // Drop zones — positions where items can be dropped (along the base of the wall)
-    this.dropZones = [];
-
     // Animation state for dropped items
     this.fallingItems = [];
+
+    // Pending rock impacts (queue instead of single slot)
+    this._pendingRockImpacts = [];
 
     // Camera zoom transition
     this.zoomProgress = 0;
@@ -50,8 +53,8 @@ export class GateDefenseSystem {
     this.selectedItem = DefenseItem.ROCKS;
     this.inventory = { oil: 5, rocks: 6, fire: 3 };
     this.activeEffects = [];
-    this.gateZombies = [];
     this.fallingItems = [];
+    this._pendingRockImpacts = [];
     this.zoomProgress = 0;
   }
 
@@ -62,7 +65,17 @@ export class GateDefenseSystem {
     this.zoomProgress = 0;
     this.activeEffects = [];
     this.fallingItems = [];
-    this.gateZombies = [];
+    this._pendingRockImpacts = [];
+  }
+
+  deactivate(waveSystem) {
+    this.active = false;
+    // Restore all zombie speeds on deactivation
+    if (waveSystem) {
+      for (const zombie of waveSystem.zombies) {
+        if (zombie.alive) zombie.speed = zombie.baseSpeed;
+      }
+    }
   }
 
   selectItem(item) {
@@ -93,9 +106,9 @@ export class GateDefenseSystem {
       fallDuration: 0.4,
     });
 
-    // Auto-switch if out of current item
+    // Auto-switch if out of current item (explicit priority order)
     if (this.inventory[this.selectedItem] <= 0) {
-      for (const key of Object.keys(this.inventory)) {
+      for (const key of ITEM_PRIORITY) {
         if (this.inventory[key] > 0) {
           this.selectedItem = key;
           break;
@@ -133,6 +146,15 @@ export class GateDefenseSystem {
       }
     }
 
+    // Reset all zombie speeds to base, then re-apply active oil effects
+    if (waveSystem) {
+      for (const zombie of waveSystem.zombies) {
+        if (zombie.alive && !zombie.falling && !zombie.plankState) {
+          zombie.speed = zombie.baseSpeed;
+        }
+      }
+    }
+
     // Update active effects
     for (let i = this.activeEffects.length - 1; i >= 0; i--) {
       const effect = this.activeEffects[i];
@@ -145,11 +167,11 @@ export class GateDefenseSystem {
           if (!zombie.isInRadius(effect.x, effect.y, effect.radius)) continue;
 
           if (effect.type === DefenseItem.OIL && !effect.ignited) {
-            // Oil slows zombies
-            zombie.speed = zombie.baseSpeed * effect.slowFactor;
+            // Oil slows zombies (stacks take the slowest)
+            zombie.speed = Math.min(zombie.speed, zombie.baseSpeed * effect.slowFactor);
           } else if (effect.type === DefenseItem.FIRE || effect.ignited) {
             // Fire does damage over time (once per second)
-            if (effect.timer - (effect._lastDmgTick || 0) >= 1) {
+            if (effect.timer - effect._lastDmgTick >= 1) {
               effect._lastDmgTick = effect.timer;
               zombie.takeDamage(effect.damage);
             }
@@ -159,12 +181,6 @@ export class GateDefenseSystem {
 
       // Remove expired effects
       if (effect.duration > 0 && effect.timer >= effect.duration) {
-        // Reset zombie speeds when oil expires
-        if (effect.type === DefenseItem.OIL && waveSystem) {
-          for (const zombie of waveSystem.zombies) {
-            if (zombie.alive) zombie.speed = zombie.baseSpeed;
-          }
-        }
         this.activeEffects.splice(i, 1);
       }
     }
@@ -189,8 +205,8 @@ export class GateDefenseSystem {
     const stats = DEFENSE_STATS[type];
 
     if (type === DefenseItem.ROCKS) {
-      // Rocks do instant damage, no lingering effect
-      this._pendingRockImpact = { x, y, damage: stats.damage, radius: stats.radius };
+      // Rocks do instant damage, no lingering effect — queue the impact
+      this._pendingRockImpacts.push({ x, y, damage: stats.damage, radius: stats.radius });
       return;
     }
 
@@ -209,11 +225,14 @@ export class GateDefenseSystem {
     });
   }
 
-  applyRockImpact(waveSystem) {
-    if (!this._pendingRockImpact) return null;
-    const rock = this._pendingRockImpact;
-    this._pendingRockImpact = null;
-    return waveSystem.damageZombiesInRadius(rock.x, rock.y, rock.radius, rock.damage);
+  applyRockImpacts(waveSystem) {
+    if (this._pendingRockImpacts.length === 0) return 0;
+    let totalKills = 0;
+    for (const rock of this._pendingRockImpacts) {
+      totalKills += waveSystem.damageZombiesInRadius(rock.x, rock.y, rock.radius, rock.damage) || 0;
+    }
+    this._pendingRockImpacts = [];
+    return totalKills;
   }
 
   isHoldComplete() {
@@ -228,58 +247,14 @@ export class GateDefenseSystem {
     return Math.min(1, this.holdTimer / this.holdDuration);
   }
 
-  hasAnyItems() {
-    return Object.values(this.inventory).some(v => v > 0);
-  }
-
-  getSelectedStats() {
-    return DEFENSE_STATS[this.selectedItem];
-  }
-
-  // Get the zoomed-in view bounds for the gate defense camera
-  getViewBounds(gameSize, castleY) {
-    const viewHeight = gameSize * 0.45;
-    const viewTop = castleY - viewHeight + 40;
-    return {
-      x: 0,
-      y: viewTop,
-      width: gameSize,
-      height: viewHeight,
-      centerX: gameSize / 2,
-      centerY: castleY - viewHeight / 2 + 40,
-    };
-  }
-
-  draw(ctx, gameSize, castleY, waveSystem) {
-    if (!this.active) return;
-
+  // Compute the zoom/pan transform for the gate defense camera
+  getZoomTransform(gameSize, castleY) {
     const eased = this.easeInOutCubic(this.zoomProgress);
-    const bounds = this.getViewBounds(gameSize, castleY);
-
-    // During zoom transition, calculate intermediate values
-    const zoom = 1 + eased * 1.2; // zoom from 1x to 2.2x
-    const panY = eased * (bounds.centerY - gameSize / 2);
-
-    ctx.save();
-
-    // Apply zoom centered on gate area
-    ctx.translate(gameSize / 2, gameSize / 2);
-    ctx.scale(zoom, zoom);
-    ctx.translate(-gameSize / 2, -gameSize / 2 - panY);
-
-    // Draw active effects (oil slicks, fire patches)
-    for (const effect of this.activeEffects) {
-      this.drawEffect(ctx, effect);
-    }
-
-    // Draw falling items
-    for (const fi of this.fallingItems) {
-      this.drawFallingItem(ctx, fi);
-    }
-
-    ctx.restore();
-
-    // Draw targeting reticle at mouse position (drawn in screen space by HUD)
+    const viewHeight = gameSize * 0.45;
+    const centerY = castleY - viewHeight / 2 + 40;
+    const zoom = 1 + eased * 1.2;
+    const panY = eased * (centerY - gameSize / 2);
+    return { zoom, panY, eased };
   }
 
   drawEffect(ctx, effect) {
@@ -320,40 +295,12 @@ export class GateDefenseSystem {
 
   drawFallingItem(ctx, fi) {
     ctx.save();
-    const stats = DEFENSE_STATS[fi.type];
     const size = 8;
+    const sprites = getSprites();
+    const sprite = sprites.defense[fi.type];
 
-    if (fi.type === DefenseItem.OIL) {
-      // Blue barrel
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(fi.x - size - 1, fi.y - size - 1, size * 2 + 2, size * 2 + 2);
-      ctx.fillStyle = '#2980b9';
-      ctx.fillRect(fi.x - size, fi.y - size, size * 2, size * 2);
-      ctx.fillStyle = '#3498db';
-      ctx.fillRect(fi.x - size + 2, fi.y - size + 2, size - 2, size * 2 - 4);
-    } else if (fi.type === DefenseItem.ROCKS) {
-      // Gray rocks cluster
-      ctx.fillStyle = '#1a1a1a';
-      ctx.beginPath();
-      ctx.arc(fi.x, fi.y, size + 1, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#888888';
-      ctx.beginPath();
-      ctx.arc(fi.x, fi.y, size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#aaaaaa';
-      ctx.beginPath();
-      ctx.arc(fi.x - 2, fi.y - 2, size * 0.4, 0, Math.PI * 2);
-      ctx.fill();
-    } else if (fi.type === DefenseItem.FIRE) {
-      // Fire pot
-      ctx.fillStyle = '#1a1a1a';
-      ctx.fillRect(fi.x - size - 1, fi.y - size - 1, size * 2 + 2, size * 2 + 2);
-      ctx.fillStyle = '#cc4400';
-      ctx.fillRect(fi.x - size, fi.y - size, size * 2, size * 2);
-      ctx.fillStyle = '#f1c40f';
-      ctx.fillRect(fi.x - size / 2, fi.y - size, size, size);
-    }
+    // Draw the sprite (scaled to match the falling item size)
+    drawSpriteAt(ctx, sprite, fi.x - size, fi.y - size, 2);
 
     // Drop shadow grows as item falls
     const t = fi.fallTimer / fi.fallDuration;
