@@ -5,6 +5,7 @@ export const GameState = {
   LEVEL_SELECT: 'level_select',
   PRE_LEVEL: 'pre_level',
   PLAYING: 'playing',
+  GATE_DEFENSE: 'gate_defense',
   WAVE_CLEAR: 'wave_clear',
   LEVEL_COMPLETE: 'level_complete',
   GAME_OVER: 'game_over',

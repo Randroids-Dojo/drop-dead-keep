@@ -1,6 +1,9 @@
 // Drop Dead Keep — In-Game HUD Overlay (Pixel Art)
 
-import { drawPixelText, measurePixelText, pixelTextHeight, drawPixelBox, drawPixelBar } from '../sprites/pixel-font.js';
+import { drawPixelText, measurePixelText, pixelTextHeight, drawPixelBox, drawPixelBar, drawPixelButton } from '../sprites/pixel-font.js';
+import { getSprites } from '../sprites/pixel-data.js';
+import { drawSpriteAt } from '../sprites/sprite-renderer.js';
+import { DefenseItem } from '../systems/gate-defense.js';
 
 export class HUD {
   constructor() {
@@ -228,6 +231,141 @@ export class HUD {
     });
 
     ctx.restore();
+  }
+
+  drawGateDefense(ctx, canvasWidth, canvasHeight, gameState) {
+    const { waveSystem, scoringSystem, gateDefense } = gameState;
+
+    // Score display (top-left)
+    drawPixelText(ctx, `SCORE: ${scoringSystem.score}`, 20, 14, {
+      color: '#ffffff',
+      size: 3,
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
+
+    // "DEFEND THE GATE" header (top-center)
+    const pulse = 0.7 + Math.sin(Date.now() * 0.004) * 0.3;
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    drawPixelText(ctx, 'DEFEND THE GATE!', canvasWidth / 2, 12, {
+      color: '#e74c3c',
+      size: 2,
+      align: 'center',
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
+    ctx.restore();
+
+    // Gate health (top-right)
+    this.drawGateHealth(ctx, canvasWidth, waveSystem);
+
+    // Hold timer (below gate health)
+    const remaining = gateDefense.getHoldTimeRemaining();
+    const secs = Math.ceil(remaining);
+    const holdPct = gateDefense.getHoldProgress();
+    const holdBarW = 120;
+    const holdBarH = 14;
+    const holdBarX = canvasWidth - holdBarW - 20;
+    const holdBarY = 40;
+
+    drawPixelText(ctx, 'HOLD', holdBarX - 8, holdBarY + 1, {
+      color: '#bdc3c7',
+      size: 1,
+      align: 'right',
+    });
+
+    drawPixelBar(ctx, holdBarX, holdBarY, holdBarW, holdBarH, holdPct * 100, 100, {
+      bg: '#333333',
+      border: '#555555',
+      fillColor: '#e67e22',
+    });
+
+    drawPixelText(ctx, `0:${secs.toString().padStart(2, '0')}`, holdBarX + holdBarW / 2, holdBarY + 3, {
+      color: '#ffffff',
+      size: 1,
+      align: 'center',
+    });
+
+    // Defense item bar (bottom of screen)
+    this.drawDefenseItemBar(ctx, canvasWidth, canvasHeight, gateDefense);
+
+    // Instruction text
+    drawPixelText(ctx, 'CLICK TO DROP ITEMS ON ENEMIES', canvasWidth / 2, canvasHeight - 14, {
+      color: 'rgba(255, 255, 255, 0.4)',
+      size: 1,
+      align: 'center',
+    });
+
+    // Banner
+    if (this.banner) {
+      this.drawBanner(ctx, canvasWidth, canvasHeight);
+    }
+
+    // Score popups
+    scoringSystem.draw(ctx);
+  }
+
+  drawDefenseItemBar(ctx, canvasWidth, canvasHeight, gateDefense) {
+    const sprites = getSprites();
+    const items = [
+      { type: DefenseItem.OIL, sprite: sprites.defense.oil, key: 'oil', label: 'OIL', keyNum: '1' },
+      { type: DefenseItem.ROCKS, sprite: sprites.defense.rocks, key: 'rocks', label: 'ROCKS', keyNum: '2' },
+      { type: DefenseItem.FIRE, sprite: sprites.defense.fire, key: 'fire', label: 'FIRE', keyNum: '3' },
+    ];
+
+    const spacing = 70;
+    const barY = canvasHeight - 50;
+    const startX = canvasWidth / 2 - (items.length * spacing) / 2 + spacing / 2;
+
+    // Background bar
+    const bgW = items.length * spacing + 20;
+    drawPixelBox(ctx, canvasWidth / 2 - bgW / 2, barY - 22, bgW, 44, {
+      bg: 'rgba(0, 0, 0, 0.6)',
+      border: '#555555',
+      borderWidth: 2,
+    });
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const ix = startX + i * spacing;
+      const count = gateDefense.inventory[item.key];
+      const isSelected = gateDefense.selectedItem === item.type;
+      const isEmpty = count <= 0;
+
+      // Selection highlight
+      if (isSelected && !isEmpty) {
+        ctx.save();
+        ctx.fillStyle = '#e67e22';
+        ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.005) * 0.1;
+        ctx.fillRect(ix - 24, barY - 20, 48, 40);
+        ctx.restore();
+
+        // Border
+        ctx.strokeStyle = '#e67e22';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(ix - 24, barY - 20, 48, 40);
+      }
+
+      // Sprite icon
+      ctx.save();
+      if (isEmpty) ctx.globalAlpha = 0.3;
+      drawSpriteAt(ctx, item.sprite, ix - 12, barY - 14, 3);
+      ctx.restore();
+
+      // Count text
+      drawPixelText(ctx, `x${count}`, ix + 14, barY + 6, {
+        color: isEmpty ? '#666666' : '#ffffff',
+        size: 1,
+        align: 'center',
+      });
+
+      // Key hint
+      drawPixelText(ctx, item.keyNum, ix - 18, barY - 18, {
+        color: '#888888',
+        size: 1,
+      });
+    }
   }
 
   drawFailureHint(ctx, canvasWidth, canvasHeight) {

@@ -17,6 +17,7 @@ import { InputHandler } from './ui/controls.js';
 import { UpdateBanner } from './ui/update-banner.js';
 import { PauseFab } from './ui/pause-fab.js';
 import { FeedbackFab } from './ui/feedback-fab.js';
+import { GateDefenseSystem, DefenseItem } from './systems/gate-defense.js';
 import { LEVELS } from './data/levels.js';
 import { setupPixelCanvas } from './sprites/sprite-renderer.js';
 import { getSprites } from './sprites/pixel-data.js';
@@ -69,6 +70,7 @@ const audio = new AudioEngine();
 const hud = new HUD();
 const menus = new MenuSystem();
 const input = new InputHandler(canvas);
+const gateDefense = new GateDefenseSystem();
 const updateBanner = new UpdateBanner();
 const pauseFab = new PauseFab();
 const feedbackFab = new FeedbackFab();
@@ -77,7 +79,7 @@ const feedbackFab = new FeedbackFab();
 updateBanner.init();
 feedbackFab.init();
 pauseFab.init(() => {
-  if (game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR) {
+  if (game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR || game.state === GameState.GATE_DEFENSE) {
     game.setState(GameState.PAUSED);
   }
 });
@@ -109,6 +111,7 @@ function loadLevel(levelId) {
 
   projectiles = [];
   scoring.reset();
+  gateDefense.reset();
   waveSystem.loadWaves(level.waves, level.gateHp);
 
   tutorialStep = 0;
@@ -275,6 +278,10 @@ function update(time) {
       updatePlaying(dt);
       break;
 
+    case GameState.GATE_DEFENSE:
+      updateGateDefense(dt);
+      break;
+
     case GameState.WAVE_CLEAR:
       preWaveTimer -= dt;
       if (preWaveTimer <= 0) {
@@ -294,7 +301,7 @@ function update(time) {
   }
 
   // Update HTML overlay visibility
-  const isActive = game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR;
+  const isActive = game.state === GameState.PLAYING || game.state === GameState.PRE_LEVEL || game.state === GameState.WAVE_CLEAR || game.state === GameState.GATE_DEFENSE;
   const isPaused = game.state === GameState.PAUSED;
   pauseFab.setVisible(isActive && !isPaused);
   feedbackFab.setVisible(isPaused);
@@ -383,6 +390,12 @@ function updatePlaying(dt) {
   // Tutorial
   updateTutorial(dt);
 
+  // Check if zombies have breached — trigger gate defense view
+  if (waveSystem.zombiesBreached > 0 && !gateDefense.active && waveSystem.gateHp > 0) {
+    activateGateDefense();
+    return;
+  }
+
   // Check game over
   if (waveSystem.isGameOver()) {
     audio.play('gate_alarm');
@@ -402,6 +415,138 @@ function updatePlaying(dt) {
       preWaveTimer = 4; // intermission
     }
   }
+}
+
+// --- Gate Defense ---
+function activateGateDefense() {
+  gateDefense.activate(15);
+  audio.play('gate_defense_start');
+  hud.showBanner('DEFEND THE GATE!', 2);
+  game.setState(GameState.GATE_DEFENSE);
+}
+
+function updateGateDefense(dt) {
+  gateDefense.update(dt, waveSystem);
+
+  // Apply rock impacts
+  const kills = gateDefense.applyRockImpact(waveSystem);
+  if (kills > 0) {
+    audio.play('rock_drop');
+    camera.shake(4);
+    scoring.onZombieKilledByProjectile(gameMap.gatePoint.x, gameMap.gatePoint.y);
+  }
+
+  // Convert input to game coordinates
+  const gm = canvasToGame(input.mouseX, input.mouseY);
+
+  // Keyboard defense item selection
+  if (input.isKeyJustPressed('1')) gateDefense.selectItem(DefenseItem.OIL);
+  if (input.isKeyJustPressed('2')) gateDefense.selectItem(DefenseItem.ROCKS);
+  if (input.isKeyJustPressed('3')) gateDefense.selectItem(DefenseItem.FIRE);
+
+  // Pause
+  if (input.isKeyJustPressed('Escape') || input.isKeyJustPressed('p')) {
+    game.setState(GameState.PAUSED);
+    return;
+  }
+
+  // Handle click to drop items
+  if (input.mouseJustPressed) {
+    // Check if clicking on defense item bar
+    const itemClicked = handleDefenseItemBarClick(gm.x, gm.y);
+    if (!itemClicked && gateDefense.canDrop()) {
+      // Transform click coordinates into the zoomed gate view space
+      const dropPos = screenToGateDefenseCoords(gm.x, gm.y);
+      // Only allow drops in the area in front of the gate
+      if (dropPos.y > gameMap.castleY - 140 && dropPos.y < gameMap.castleY) {
+        const result = gateDefense.dropItem(dropPos.x, dropPos.y);
+        if (result) {
+          if (result.type === DefenseItem.OIL) audio.play('oil_pour');
+          else if (result.type === DefenseItem.ROCKS) audio.play('rock_drop');
+          else if (result.type === DefenseItem.FIRE) audio.play('fire_ignite');
+          camera.shake(2);
+        }
+      }
+    }
+  }
+
+  // Continue updating wave system (zombies still move)
+  waveSystem.update(dt, gameMap.bridges);
+  physics.update(dt);
+  particles.update(dt);
+  scoring.update(dt);
+  hud.update(dt);
+
+  // Check game over
+  if (waveSystem.isGameOver()) {
+    audio.play('gate_alarm');
+    gateDefense.active = false;
+    game.setState(GameState.GAME_OVER);
+    return;
+  }
+
+  // Check if hold timer completed — zombies retreat, return to slingshot
+  if (gateDefense.isHoldComplete()) {
+    gateDefense.active = false;
+    audio.play('wave_clear');
+    hud.showBanner('GATE HELD!', 2);
+
+    if (waveSystem.allWavesComplete && waveSystem.spawnQueue.length === 0) {
+      completeLevelScreen();
+    } else {
+      game.setState(GameState.PLAYING);
+    }
+    return;
+  }
+
+  // Also end gate defense if wave completes while defending
+  if (waveSystem.waveComplete) {
+    waveSystem.waveComplete = false;
+    gateDefense.active = false;
+    if (waveSystem.allWavesComplete) {
+      audio.play('wave_clear');
+      completeLevelScreen();
+    } else {
+      audio.play('wave_clear');
+      game.setState(GameState.WAVE_CLEAR);
+      preWaveTimer = 4;
+    }
+    return;
+  }
+}
+
+function screenToGateDefenseCoords(screenX, screenY) {
+  // Reverse the zoom transform applied in gate defense drawing
+  const eased = gateDefense.easeInOutCubic(gateDefense.zoomProgress);
+  const bounds = gateDefense.getViewBounds(GAME_SIZE, gameMap.castleY);
+  const zoom = 1 + eased * 1.2;
+  const panY = eased * (bounds.centerY - GAME_SIZE / 2);
+
+  const cx = GAME_SIZE / 2;
+  const cy = GAME_SIZE / 2;
+  const x = (screenX - cx) / zoom + cx;
+  const y = (screenY - cy) / zoom + cy + panY;
+  return { x, y };
+}
+
+function handleDefenseItemBarClick(mx, my) {
+  const barY = GAME_SIZE - 50;
+  if (my < barY - 20 || my > barY + 20) return false;
+
+  const items = [DefenseItem.OIL, DefenseItem.ROCKS, DefenseItem.FIRE];
+  const spacing = 70;
+  const startX = GAME_SIZE / 2 - (items.length * spacing) / 2 + spacing / 2;
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    const ix = startX + i * spacing;
+    if (Math.abs(mx - ix) < 25) {
+      gateDefense.selectItem(item);
+      audio.play('ui_click');
+      return true;
+    }
+  }
+  return false;
 }
 
 function startNextWave() {
@@ -492,8 +637,16 @@ function draw() {
       drawGameplay();
       break;
 
+    case GameState.GATE_DEFENSE:
+      drawGateDefenseView();
+      break;
+
     case GameState.PAUSED:
-      drawGameplay();
+      if (game.prevState === GameState.GATE_DEFENSE) {
+        drawGateDefenseView();
+      } else {
+        drawGameplay();
+      }
       menus.drawPauseOverlay(ctx, GAME_SIZE, GAME_SIZE);
       break;
 
@@ -540,6 +693,54 @@ function drawGameplay() {
   catapult.drawAimingUI(ctx, GAME_SIZE, GAME_SIZE);
   catapult.drawAmmoBar(ctx, GAME_SIZE, GAME_SIZE, game.progress.unlockedAmmo);
   hud.draw(ctx, GAME_SIZE, GAME_SIZE, { waveSystem, scoringSystem: scoring });
+}
+
+function drawGateDefenseView() {
+  const eased = gateDefense.easeInOutCubic(gateDefense.zoomProgress);
+  const bounds = gateDefense.getViewBounds(GAME_SIZE, gameMap.castleY);
+  const zoom = 1 + eased * 1.2;
+  const panY = eased * (bounds.centerY - GAME_SIZE / 2);
+
+  ctx.save();
+
+  // Apply zoomed camera centered on the gate area
+  ctx.translate(GAME_SIZE / 2, GAME_SIZE / 2);
+  ctx.scale(zoom, zoom);
+  ctx.translate(-GAME_SIZE / 2, -GAME_SIZE / 2 - panY);
+
+  // Apply screen shake
+  ctx.translate(camera.shakeOffsetX, camera.shakeOffsetY);
+
+  // Draw the map (includes castle wall)
+  gameMap.draw(ctx);
+
+  // Draw active gate defense effects (oil, fire on the ground)
+  for (const effect of gateDefense.activeEffects) {
+    gateDefense.drawEffect(ctx, effect);
+  }
+
+  // Draw falling items
+  for (const fi of gateDefense.fallingItems) {
+    gateDefense.drawFallingItem(ctx, fi);
+  }
+
+  // Draw zombies
+  const allZombies = [...waveSystem.zombies].sort((a, b) => a.y - b.y);
+  for (const zombie of allZombies) {
+    zombie.draw(ctx);
+  }
+
+  // Particles
+  particles.draw(ctx);
+
+  ctx.restore();
+
+  // Draw gate defense HUD (in screen space)
+  hud.drawGateDefense(ctx, GAME_SIZE, GAME_SIZE, {
+    waveSystem,
+    scoringSystem: scoring,
+    gateDefense,
+  });
 }
 
 // --- Input Handling for Menus ---
@@ -596,7 +797,7 @@ function handleMenuInput() {
 
     case GameState.PAUSED:
       if (clicked === 'resume') {
-        game.setState(GameState.PLAYING);
+        game.setState(game.prevState === GameState.GATE_DEFENSE ? GameState.GATE_DEFENSE : GameState.PLAYING);
       } else if (clicked === 'levels') {
         game.setState(GameState.LEVEL_SELECT);
       }

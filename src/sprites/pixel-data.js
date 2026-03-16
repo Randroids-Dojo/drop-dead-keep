@@ -623,6 +623,60 @@ const SKULL_ICON = [
 ];
 
 // ============================================================
+// GATE DEFENSE ITEM SPRITES (8x8)
+// ============================================================
+
+const DEFENSE_PALETTE = {
+    '.': null,
+    'B': '#1a1a1a', // black outline
+    'U': '#2980b9', // blue (oil)
+    'u': '#1a5276', // dark blue
+    'L': '#3498db', // light blue highlight
+    'S': '#888888', // stone gray
+    's': '#666666', // dark stone
+    'H': '#aaaaaa', // stone highlight
+    'O': '#e67e22', // orange
+    'o': '#cc4400', // dark orange
+    'Y': '#f1c40f', // yellow
+    'R': '#cc3333', // red
+    'T': '#8B6914', // wood
+    't': '#6B4226', // dark wood
+};
+
+const OIL_BARREL = [
+    '..BBBB..',
+    '.BuLUuB.',
+    'BuULUUuB',
+    'BUULUUuB',
+    'BuUUUUuB',
+    'BuUUUuUB',
+    '.BuUUuB.',
+    '..BBBB..',
+];
+
+const ROCKS_PILE = [
+    '....BB..',
+    '...BHSB.',
+    '.BBHSSB.',
+    'BHSSsSBB',
+    'BSSsSHSB',
+    'BSsSSsSB',
+    '.BBSSsB.',
+    '..BBBB..',
+];
+
+const FIRE_POT = [
+    '..YOY...',
+    '.YOOOY..',
+    '..ROOB..',
+    '.BTTTTB.',
+    'BtTTTTtB',
+    'BtTTTTtB',
+    '.BtTTtB.',
+    '..BBBB..',
+];
+
+// ============================================================
 // CLIFF / TERRAIN TILES (8x8)
 // ============================================================
 
@@ -779,6 +833,13 @@ function buildSprites() {
         starEmpty: createSprite(UI_PALETTE, STAR_EMPTY),
         lock: createSprite(UI_PALETTE, LOCK_ICON),
         skull: createSprite(UI_PALETTE, SKULL_ICON),
+    };
+
+    // Gate Defense Items
+    sprites.defense = {
+        oil: createSprite(DEFENSE_PALETTE, OIL_BARREL),
+        rocks: createSprite(DEFENSE_PALETTE, ROCKS_PILE),
+        fire: createSprite(DEFENSE_PALETTE, FIRE_POT),
     };
 
     return sprites;
