@@ -430,7 +430,7 @@ function updateGateDefense(dt) {
 
   // Apply rock impacts to the main wave system as well
   const kills = gateDefense.applyRockImpacts(waveSystem);
-  if (kills > 0) {
+  for (let i = 0; i < kills; i++) {
     scoring.onZombieKilledByProjectile(gameMap.gatePoint.x, gameMap.gatePoint.y);
   }
 

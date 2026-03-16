@@ -280,7 +280,7 @@ export class GateDefenseSystem {
       ...stats, type, x, y,
       timer: 0,
       ignited: false,
-      _lastDmgTick: 0,
+      _lastDmgTick: -1,
     });
   }
 
@@ -436,10 +436,12 @@ export class GateDefenseSystem {
     ctx.fillStyle = '#3a3a30';
     ctx.fillRect(0, wallY, gameSize, 4);
 
-    // Torches with cached gradients
+    // Cached gradients for torches and shadow
+    const gradients = this._ensureGradients(ctx, gameSize);
+
+    // Torches
     const torchSprite = sprites.castle.torch[Math.floor(now / 300) % 2];
     if (torchSprite) {
-      const gradients = this._ensureGradients(ctx, gameSize);
       for (let i = 0; i < TORCH_POSITIONS.length; i++) {
         const tx = TORCH_POSITIONS[i];
         drawSpriteAt(ctx, torchSprite, tx - 8, wallY + wallH / 2 - 10, 2.5);
@@ -453,7 +455,6 @@ export class GateDefenseSystem {
 
     // Wall shadow
     ctx.save();
-    const gradients = this._ensureGradients(ctx, gameSize);
     ctx.fillStyle = gradients.shadowGrd;
     ctx.fillRect(0, SCENE.WALL_BOTTOM, gameSize, 50);
     ctx.restore();
