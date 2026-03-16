@@ -453,10 +453,9 @@ function updateGateDefense(dt) {
     // Check if clicking on defense item bar (HUD at bottom of screen)
     const itemClicked = handleDefenseItemBarClick(gm.x, gm.y);
     if (!itemClicked && gateDefense.canDrop()) {
-      const dropPos = screenToGateDefenseCoords(gm.x, gm.y);
       // Only allow drops in the valid drop zone (below the wall)
-      if (gateDefense.isInDropZone(dropPos.x, dropPos.y)) {
-        const result = gateDefense.dropItem(dropPos.x, dropPos.y);
+      if (gateDefense.isInDropZone(gm.x, gm.y)) {
+        const result = gateDefense.dropItem(gm.x, gm.y);
         if (result) {
           if (result.type === DefenseItem.OIL) audio.play('oil_pour');
           else if (result.type === DefenseItem.ROCKS) audio.play('rock_drop');
@@ -474,14 +473,14 @@ function updateGateDefense(dt) {
   // Check game over
   if (waveSystem.isGameOver()) {
     audio.play('gate_alarm');
-    gateDefense.deactivate(waveSystem);
+    gateDefense.deactivate();
     game.setState(GameState.GAME_OVER);
     return;
   }
 
   // Check if hold timer completed — zombies retreat, return to slingshot
   if (gateDefense.isHoldComplete()) {
-    gateDefense.deactivate(waveSystem);
+    gateDefense.deactivate();
     audio.play('wave_clear');
     hud.showBanner('GATE HELD!', 2);
 
@@ -496,7 +495,7 @@ function updateGateDefense(dt) {
   // Also end gate defense if wave completes while defending
   if (waveSystem.waveComplete) {
     waveSystem.waveComplete = false;
-    gateDefense.deactivate(waveSystem);
+    gateDefense.deactivate();
     if (waveSystem.allWavesComplete) {
       audio.play('wave_clear');
       completeLevelScreen();
@@ -507,11 +506,6 @@ function updateGateDefense(dt) {
     }
     return;
   }
-}
-
-function screenToGateDefenseCoords(screenX, screenY) {
-  // New scene uses direct coordinates — no zoom transform
-  return { x: screenX, y: screenY };
 }
 
 function handleDefenseItemBarClick(mx, my) {
