@@ -107,16 +107,25 @@ export class WaveSystem {
       }
     }
 
-    // Track kills (count dead non-falling zombies, excluding gate breaches)
-    const deadThisFrame = this.zombies.filter(z => !z.alive && !z.falling && !z._breached);
-    this.zombiesKilled += deadThisFrame.length;
-
-    // Remove dead zombies that have finished their animations (keep plank zombies for rendering)
-    this.zombies = this.zombies.filter(z => z.alive || z.falling || z.isPlank);
+    // Single pass: count kills, compact array, count active zombies
+    let killsThisFrame = 0;
+    let activeCount = 0;
+    const kept = [];
+    for (const z of this.zombies) {
+      if (!z.alive && !z.falling && !z._breached) {
+        killsThisFrame++;
+        continue; // dead and done, remove
+      }
+      if (z.alive || z.falling || z.plankState) {
+        kept.push(z);
+        if (!z.plankState) activeCount++;
+      }
+    }
+    this.zombiesKilled += killsThisFrame;
+    this.zombies = kept;
 
     // Check wave completion (plank zombies don't count as active)
-    const activeZombies = this.zombies.filter(z => !z.isPlank);
-    if (this.spawnQueue.length === 0 && activeZombies.length === 0) {
+    if (this.spawnQueue.length === 0 && activeCount === 0) {
       this.waveActive = false;
       this.waveComplete = true;
       this.currentWave++;
@@ -136,8 +145,7 @@ export class WaveSystem {
   }
 
   isLevelComplete() {
-    const activeZombies = this.zombies.filter(z => !z.isPlank);
-    return this.allWavesComplete && activeZombies.length === 0;
+    return this.allWavesComplete && !this.zombies.some(z => !z.plankState);
   }
 
   getCurrentWaveNumber() {
@@ -153,13 +161,13 @@ export class WaveSystem {
   }
 
   getAliveZombies() {
-    return this.zombies.filter(z => z.alive && !z.falling && !z.isPlank);
+    return this.zombies.filter(z => z.alive && !z.falling && !z.plankState);
   }
 
   damageZombiesInRadius(x, y, radius, damage) {
     let kills = 0;
     for (const zombie of this.zombies) {
-      if (!zombie.alive || zombie.falling || zombie.isPlank || zombie.becomingPlank) continue;
+      if (!zombie.alive || zombie.falling || zombie.plankState) continue;
       if (zombie.isInRadius(x, y, radius)) {
         zombie.takeDamage(damage);
         if (!zombie.alive) kills++;

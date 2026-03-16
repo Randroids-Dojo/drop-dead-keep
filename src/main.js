@@ -229,7 +229,7 @@ function handleProjectileImpact(proj) {
       const dmgFactor = 1 - dist / (stats.splashRadius * scale);
       const damage = Math.max(1, Math.ceil(stats.damage * dmgFactor));
 
-      const wasBecomingPlank = zombie.becomingPlank;
+      const wasBecomingPlank = zombie.plankState === 'becoming';
       zombie.takeDamage(damage);
 
       if (!zombie.alive) {

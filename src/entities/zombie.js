@@ -57,8 +57,8 @@ export class Zombie {
     this.flashTimer = 0;
 
     // Plank mechanic — any zombie can become a bridge plank
-    this.becomingPlank = false;
-    this.isPlank = false;
+    // plankState: null (normal), 'becoming' (positioning), 'placed' (is the bridge)
+    this.plankState = null;
     this.plankTimer = 0;
     this.plankBridge = null;
   }
@@ -89,12 +89,11 @@ export class Zombie {
     }
 
     // Zombie is positioning itself to become a plank
-    if (this.becomingPlank) {
+    if (this.plankState === 'becoming') {
       this.plankTimer += dt;
       if (this.plankTimer >= 1.0) {
         // Done positioning — become the bridge plank
-        this.becomingPlank = false;
-        this.isPlank = true;
+        this.plankState = 'placed';
         if (this.plankBridge) {
           this.plankBridge.zombieBridged = true;
         }
@@ -103,7 +102,7 @@ export class Zombie {
     }
 
     // Already a plank — stay put, do nothing
-    if (this.isPlank) return;
+    if (this.plankState === 'placed') return;
 
     // Follow waypoints
     if (this.targetWaypoint < this.waypoints.length) {
@@ -120,7 +119,7 @@ export class Zombie {
             this.targetWaypoint++;
           } else {
             // Sacrifice self to become the bridge plank
-            this.becomingPlank = true;
+            this.plankState = 'becoming';
             this.plankTimer = 0;
             this.plankBridge = wp.bridge;
             return;
@@ -149,6 +148,11 @@ export class Zombie {
     if (this.hp <= 0) {
       this.hp = 0;
       this.alive = false;
+      // If this zombie was a bridge plank, clear the bridge so a new zombie must sacrifice
+      if (this.plankState && this.plankBridge) {
+        this.plankBridge.zombieBridged = false;
+        this.plankState = null;
+      }
     }
   }
 
@@ -172,7 +176,7 @@ export class Zombie {
     const y = this.y;
 
     // Walk bob
-    const bob = (this.falling || this.becomingPlank || this.isPlank) ? 0 : Math.sin(this.walkCycle) * 2;
+    const bob = (this.falling || this.plankState) ? 0 : Math.sin(this.walkCycle) * 2;
 
     // Sprite scale: size / 5 so sprite scales with perspective
     const spriteScale = s / 5;
@@ -188,15 +192,12 @@ export class Zombie {
       opts.alpha = Math.max(0, 1 - this.fallVelocity / 300);
     }
 
-    // Becoming plank: gradually rotate to lie flat
-    if (this.becomingPlank) {
-      const progress = Math.min(this.plankTimer / 1.0, 1);
+    // Plank states: gradually rotate to lie flat, then stay flat
+    if (this.plankState === 'becoming') {
+      const progress = Math.min(this.plankTimer, 1);
       opts.rotation = (Math.PI / 2) * progress;
       opts.alpha = 1;
-    }
-
-    // Is plank: fully lying flat, slightly transparent
-    if (this.isPlank) {
+    } else if (this.plankState === 'placed') {
       opts.rotation = Math.PI / 2;
       opts.alpha = 0.85;
     }
