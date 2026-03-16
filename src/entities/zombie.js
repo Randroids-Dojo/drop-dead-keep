@@ -195,20 +195,39 @@ export class Zombie {
       opts.alpha = Math.max(0, 1 - this.fallVelocity / 300);
     }
 
-    // Plank states: rotate to lie flat and stretch to span the bridge gap
+    // Plank states: draw manually with transforms centered on the bridge gap
     if (this.plankState && this.plankBridge) {
-      // Scale sprite so its height (which becomes horizontal after rotation) spans the bridge
-      const targetScale = this.plankBridge.width / (spriteFrame.height || 1);
+      const bridge = this.plankBridge;
+      const targetScale = bridge.width / (spriteFrame.height || 1);
+      let rotation, alpha, drawScale, cx, cy;
+
       if (this.plankState === 'becoming') {
         const progress = Math.min(this.plankTimer, 1);
-        opts.rotation = (Math.PI / 2) * progress;
-        spriteScale += (targetScale - spriteScale) * progress;
-        opts.alpha = 1;
+        rotation = (Math.PI / 2) * progress;
+        drawScale = spriteScale + (targetScale - spriteScale) * progress;
+        alpha = 1;
+        // Lerp position toward bridge center
+        cx = x + (bridge.x - x) * progress;
+        cy = y + (bridge.y - y) * progress;
       } else {
-        opts.rotation = Math.PI / 2;
-        spriteScale = targetScale;
-        opts.alpha = 0.85;
+        rotation = Math.PI / 2;
+        drawScale = targetScale;
+        alpha = 0.85;
+        cx = bridge.x;
+        cy = bridge.y;
       }
+
+      const w = spriteFrame.width * drawScale;
+      const h = spriteFrame.height * drawScale;
+
+      ctx.save();
+      setupPixelCanvas(ctx);
+      ctx.globalAlpha = alpha;
+      ctx.translate(Math.round(cx), Math.round(cy));
+      ctx.rotate(rotation);
+      ctx.drawImage(spriteFrame, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      return;
     }
 
     ctx.save();
