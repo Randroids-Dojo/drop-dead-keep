@@ -229,13 +229,13 @@ function handleProjectileImpact(proj) {
       const dmgFactor = 1 - dist / (stats.splashRadius * scale);
       const damage = Math.max(1, Math.ceil(stats.damage * dmgFactor));
 
-      const wasBuilding = zombie.isBuilding;
+      const wasBecomingPlank = zombie.becomingPlank;
       zombie.takeDamage(damage);
 
       if (!zombie.alive) {
         kills++;
         scoring.onZombieKilledByProjectile(zombie.x, zombie.y);
-        if (wasBuilding) {
+        if (wasBecomingPlank) {
           scoring.onBuilderKilledWhileBuilding(zombie.x, zombie.y);
         }
         audio.play('zombie_splat');

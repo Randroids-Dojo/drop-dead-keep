@@ -38,6 +38,7 @@ export class Bridge {
     this.rebuildTime = stats.rebuildTime;
     this.color = stats.color;
     this.destroyed = false;
+    this.zombieBridged = false;
     this.planks = [];
     this.constraints = [];
     this.debris = [];
@@ -94,6 +95,7 @@ export class Bridge {
   destroy() {
     if (this.destroyed) return;
     this.destroyed = true;
+    this.zombieBridged = false;
 
     // Release all planks — make them dynamic so they fall
     for (const plank of this.planks) {
@@ -118,6 +120,7 @@ export class Bridge {
   rebuild(toHpPercent) {
     if (!this.destroyed) return;
     this.destroyed = false;
+    this.zombieBridged = false;
     this.hp = this.maxHp * (toHpPercent || 0.5);
 
     // Remove old debris
