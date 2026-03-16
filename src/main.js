@@ -221,7 +221,7 @@ function handleProjectileImpact(proj) {
   // Check zombie hits
   let kills = 0;
   for (const zombie of waveSystem.zombies) {
-    if (!zombie.alive || zombie.falling) continue;
+    if (!zombie.alive || zombie.falling || zombie.plankState) continue;
     if (zombie.isInRadius(impact.x, impact.y, stats.splashRadius * scale)) {
       const dx = zombie.x - impact.x;
       const dy = zombie.y - impact.y;

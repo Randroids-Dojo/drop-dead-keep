@@ -113,17 +113,12 @@ export class Zombie {
 
       if (dist < 5) {
         // Check if this waypoint has a bridge
-        if (wp.bridge && wp.bridge.destroyed) {
-          if (wp.bridge.zombieBridged) {
-            // Another zombie already became the plank — walk across
-            this.targetWaypoint++;
-          } else {
-            // Sacrifice self to become the bridge plank
-            this.plankState = 'becoming';
-            this.plankTimer = 0;
-            this.plankBridge = wp.bridge;
-            return;
-          }
+        if (wp.bridge && wp.bridge.destroyed && !wp.bridge.zombieBridged) {
+          // Sacrifice self to become the bridge plank
+          this.plankState = 'becoming';
+          this.plankTimer = 0;
+          this.plankBridge = wp.bridge;
+          return;
         }
         this.targetWaypoint++;
       } else {

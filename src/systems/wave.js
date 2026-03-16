@@ -107,22 +107,23 @@ export class WaveSystem {
       }
     }
 
-    // Single pass: count kills, compact array, count active zombies
+    // Single pass: count kills, compact array in-place, count active zombies
     let killsThisFrame = 0;
     let activeCount = 0;
-    const kept = [];
-    for (const z of this.zombies) {
+    let writeIdx = 0;
+    for (let i = 0; i < this.zombies.length; i++) {
+      const z = this.zombies[i];
       if (!z.alive && !z.falling && !z._breached) {
         killsThisFrame++;
-        continue; // dead and done, remove
+        continue;
       }
       if (z.alive || z.falling || z.plankState) {
-        kept.push(z);
+        this.zombies[writeIdx++] = z;
         if (!z.plankState) activeCount++;
       }
     }
+    this.zombies.length = writeIdx;
     this.zombiesKilled += killsThisFrame;
-    this.zombies = kept;
 
     // Check wave completion (plank zombies don't count as active)
     if (this.spawnQueue.length === 0 && activeCount === 0) {
