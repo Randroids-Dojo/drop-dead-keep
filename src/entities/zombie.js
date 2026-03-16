@@ -182,7 +182,7 @@ export class Zombie {
     const bob = (this.falling || this.plankState) ? 0 : Math.sin(this.walkCycle) * 2;
 
     // Sprite scale: size / 5 so sprite scales with perspective
-    const spriteScale = s / 5;
+    let spriteScale = s / 5;
 
     // Determine draw options
     const opts = {
@@ -195,14 +195,20 @@ export class Zombie {
       opts.alpha = Math.max(0, 1 - this.fallVelocity / 300);
     }
 
-    // Plank states: gradually rotate to lie flat, then stay flat
-    if (this.plankState === 'becoming') {
-      const progress = Math.min(this.plankTimer, 1);
-      opts.rotation = (Math.PI / 2) * progress;
-      opts.alpha = 1;
-    } else if (this.plankState === 'placed') {
-      opts.rotation = Math.PI / 2;
-      opts.alpha = 0.85;
+    // Plank states: rotate to lie flat and stretch to span the bridge gap
+    if (this.plankState && this.plankBridge) {
+      // Scale sprite so its height (which becomes horizontal after rotation) spans the bridge
+      const targetScale = this.plankBridge.width / (spriteFrame.height || 1);
+      if (this.plankState === 'becoming') {
+        const progress = Math.min(this.plankTimer, 1);
+        opts.rotation = (Math.PI / 2) * progress;
+        spriteScale += (targetScale - spriteScale) * progress;
+        opts.alpha = 1;
+      } else {
+        opts.rotation = Math.PI / 2;
+        spriteScale = targetScale;
+        opts.alpha = 0.85;
+      }
     }
 
     ctx.save();
