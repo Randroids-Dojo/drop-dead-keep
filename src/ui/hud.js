@@ -236,52 +236,72 @@ export class HUD {
   drawGateDefense(ctx, canvasWidth, canvasHeight, gameState) {
     const { waveSystem, scoringSystem, gateDefense } = gameState;
 
-    // Score display (top-left)
-    drawPixelText(ctx, `SCORE: ${scoringSystem.score}`, 20, 14, {
-      color: '#ffffff',
-      size: 3,
-      shadow: '#1a1a1a',
-      shadowOffset: 1,
-    });
+    // HUD sits in the castle interior area (top 140px is dark stone)
 
-    // "DEFEND THE GATE" header (top-center)
+    // "DEFEND THE GATE" header — pulsing red, prominent
     const pulse = 0.7 + Math.sin(Date.now() * 0.004) * 0.3;
     ctx.save();
     ctx.globalAlpha = pulse;
-    drawPixelText(ctx, 'DEFEND THE GATE!', canvasWidth / 2, 12, {
+    drawPixelText(ctx, 'DEFEND THE GATE!', canvasWidth / 2, 20, {
       color: '#e74c3c',
-      size: 2,
+      size: 3,
       align: 'center',
       shadow: '#1a1a1a',
       shadowOffset: 1,
     });
     ctx.restore();
 
-    // Gate health (top-right)
-    this.drawGateHealth(ctx, canvasWidth, waveSystem);
+    // Score display (top-left)
+    drawPixelText(ctx, `SCORE: ${scoringSystem.score}`, 20, 60, {
+      color: '#ffffff',
+      size: 2,
+      shadow: '#1a1a1a',
+      shadowOffset: 1,
+    });
 
-    // Hold timer (below gate health)
-    const remaining = gateDefense.getHoldTimeRemaining();
-    const secs = Math.ceil(remaining);
-    const holdPct = gateDefense.getHoldProgress();
-    const holdBarW = 120;
-    const holdBarH = 14;
-    const holdBarX = canvasWidth - holdBarW - 20;
-    const holdBarY = 40;
+    // Gate health (top-right area)
+    const gateBarW = 130;
+    const gateBarH = 14;
+    const gateBarX = canvasWidth - gateBarW - 20;
+    const gateBarY = 58;
 
-    drawPixelText(ctx, 'HOLD', holdBarX - 8, holdBarY + 1, {
+    drawPixelText(ctx, 'GATE', gateBarX - 8, gateBarY + 1, {
       color: '#bdc3c7',
       size: 1,
       align: 'right',
     });
 
-    drawPixelBar(ctx, holdBarX, holdBarY, holdBarW, holdBarH, holdPct * 100, 100, {
+    drawPixelBar(ctx, gateBarX, gateBarY, gateBarW, gateBarH, waveSystem.gateHp, waveSystem.gateMaxHp, {
+      bg: '#333333',
+      border: '#555555',
+    });
+
+    const gatePct = Math.round(waveSystem.getGateHpPercent() * 100);
+    drawPixelText(ctx, `${gatePct}%`, gateBarX + gateBarW / 2, gateBarY + 3, {
+      color: '#ffffff',
+      size: 1,
+      align: 'center',
+    });
+
+    // Hold timer (below gate bar)
+    const remaining = gateDefense.getHoldTimeRemaining();
+    const secs = Math.ceil(remaining);
+    const holdPct = gateDefense.getHoldProgress();
+    const holdBarY = gateBarY + 22;
+
+    drawPixelText(ctx, 'HOLD', gateBarX - 8, holdBarY + 1, {
+      color: '#bdc3c7',
+      size: 1,
+      align: 'right',
+    });
+
+    drawPixelBar(ctx, gateBarX, holdBarY, gateBarW, gateBarH, holdPct * 100, 100, {
       bg: '#333333',
       border: '#555555',
       fillColor: '#e67e22',
     });
 
-    drawPixelText(ctx, `0:${secs.toString().padStart(2, '0')}`, holdBarX + holdBarW / 2, holdBarY + 3, {
+    drawPixelText(ctx, `0:${secs.toString().padStart(2, '0')}`, gateBarX + gateBarW / 2, holdBarY + 3, {
       color: '#ffffff',
       size: 1,
       align: 'center',
@@ -291,8 +311,8 @@ export class HUD {
     this.drawDefenseItemBar(ctx, canvasWidth, canvasHeight, gateDefense);
 
     // Instruction text
-    drawPixelText(ctx, 'CLICK TO DROP ITEMS ON ENEMIES', canvasWidth / 2, canvasHeight - 14, {
-      color: 'rgba(255, 255, 255, 0.4)',
+    drawPixelText(ctx, 'CLICK BELOW WALL TO DROP', canvasWidth / 2, canvasHeight - 14, {
+      color: 'rgba(255, 255, 255, 0.35)',
       size: 1,
       align: 'center',
     });
@@ -315,7 +335,7 @@ export class HUD {
     ];
 
     const spacing = 70;
-    const barY = canvasHeight - 50;
+    const barY = canvasHeight - 40;
     const startX = canvasWidth / 2 - (items.length * spacing) / 2 + spacing / 2;
 
     // Background bar

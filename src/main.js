@@ -426,13 +426,11 @@ function activateGateDefense() {
 }
 
 function updateGateDefense(dt) {
-  gateDefense.update(dt, waveSystem);
+  gateDefense.update(dt);
 
-  // Apply rock impacts
+  // Apply rock impacts to the main wave system as well
   const kills = gateDefense.applyRockImpacts(waveSystem);
   if (kills > 0) {
-    audio.play('rock_drop');
-    camera.shake(4);
     scoring.onZombieKilledByProjectile(gameMap.gatePoint.x, gameMap.gatePoint.y);
   }
 
@@ -452,28 +450,24 @@ function updateGateDefense(dt) {
 
   // Handle click to drop items
   if (input.mouseJustPressed) {
-    // Check if clicking on defense item bar
+    // Check if clicking on defense item bar (HUD at bottom of screen)
     const itemClicked = handleDefenseItemBarClick(gm.x, gm.y);
     if (!itemClicked && gateDefense.canDrop()) {
-      // Transform click coordinates into the zoomed gate view space
       const dropPos = screenToGateDefenseCoords(gm.x, gm.y);
-      // Only allow drops in the area in front of the gate
-      if (dropPos.y > gameMap.castleY - 140 && dropPos.y < gameMap.castleY) {
+      // Only allow drops in the valid drop zone (below the wall)
+      if (gateDefense.isInDropZone(dropPos.x, dropPos.y)) {
         const result = gateDefense.dropItem(dropPos.x, dropPos.y);
         if (result) {
           if (result.type === DefenseItem.OIL) audio.play('oil_pour');
           else if (result.type === DefenseItem.ROCKS) audio.play('rock_drop');
           else if (result.type === DefenseItem.FIRE) audio.play('fire_ignite');
-          camera.shake(2);
         }
       }
     }
   }
 
-  // Continue updating wave system (zombies still move)
+  // Continue updating wave system in background (zombies still move on the map)
   waveSystem.update(dt, gameMap.bridges);
-  physics.update(dt);
-  particles.update(dt);
   scoring.update(dt);
   hud.update(dt);
 
@@ -516,18 +510,13 @@ function updateGateDefense(dt) {
 }
 
 function screenToGateDefenseCoords(screenX, screenY) {
-  // Reverse the zoom transform applied in gate defense drawing
-  const { zoom, panY } = gateDefense.getZoomTransform(GAME_SIZE, gameMap.castleY);
-  const cx = GAME_SIZE / 2;
-  const cy = GAME_SIZE / 2;
-  const x = (screenX - cx) / zoom + cx;
-  const y = (screenY - cy) / zoom + cy + panY;
-  return { x, y };
+  // New scene uses direct coordinates — no zoom transform
+  return { x: screenX, y: screenY };
 }
 
 function handleDefenseItemBarClick(mx, my) {
-  const barY = GAME_SIZE - 50;
-  if (my < barY - 20 || my > barY + 20) return false;
+  const barY = GAME_SIZE - 40;
+  if (my < barY - 22 || my > barY + 22) return false;
 
   const items = [DefenseItem.OIL, DefenseItem.ROCKS, DefenseItem.FIRE];
   const spacing = 70;
@@ -692,43 +681,10 @@ function drawGameplay() {
 }
 
 function drawGateDefenseView() {
-  const { zoom, panY } = gateDefense.getZoomTransform(GAME_SIZE, gameMap.castleY);
+  // Draw the dedicated top-down gate defense scene (not the regular map)
+  gateDefense.drawScene(ctx, GAME_SIZE);
 
-  ctx.save();
-
-  // Apply zoomed camera centered on the gate area
-  ctx.translate(GAME_SIZE / 2, GAME_SIZE / 2);
-  ctx.scale(zoom, zoom);
-  ctx.translate(-GAME_SIZE / 2, -GAME_SIZE / 2 - panY);
-
-  // Apply screen shake
-  ctx.translate(camera.shakeOffsetX, camera.shakeOffsetY);
-
-  // Draw the map (includes castle wall)
-  gameMap.draw(ctx);
-
-  // Draw active gate defense effects (oil, fire on the ground)
-  for (const effect of gateDefense.activeEffects) {
-    gateDefense.drawEffect(ctx, effect);
-  }
-
-  // Draw falling items
-  for (const fi of gateDefense.fallingItems) {
-    gateDefense.drawFallingItem(ctx, fi);
-  }
-
-  // Draw zombies
-  const allZombies = [...waveSystem.zombies].sort((a, b) => a.y - b.y);
-  for (const zombie of allZombies) {
-    zombie.draw(ctx);
-  }
-
-  // Particles
-  particles.draw(ctx);
-
-  ctx.restore();
-
-  // Draw gate defense HUD (in screen space)
+  // Draw gate defense HUD (in screen space, on top of scene)
   hud.drawGateDefense(ctx, GAME_SIZE, GAME_SIZE, {
     waveSystem,
     scoringSystem: scoring,
