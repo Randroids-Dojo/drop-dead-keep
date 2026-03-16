@@ -41,6 +41,10 @@ export class AudioEngine {
       case 'multi_kill': this.playMultiKill(); break;
       case 'ui_click': this.playUIClick(); break;
       case 'star': this.playStar(); break;
+      case 'oil_pour': this.playOilPour(); break;
+      case 'rock_drop': this.playRockDrop(); break;
+      case 'fire_ignite': this.playFireIgnite(); break;
+      case 'gate_defense_start': this.playGateDefenseStart(); break;
     }
   }
 
@@ -280,5 +284,101 @@ export class AudioEngine {
     osc.connect(gain).connect(this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.3);
+  }
+
+  playOilPour() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Liquid pouring — filtered noise with descending pitch
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this.noise(0.5);
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1200, now);
+    filter.frequency.exponentialRampToValueAtTime(400, now + 0.5);
+    filter.Q.value = 2;
+    gain.gain.setValueAtTime(0.12 * this.masterVolume, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    noise.connect(filter).connect(gain).connect(this.ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.5);
+  }
+
+  playRockDrop() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Heavy thud
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
+    gain.gain.setValueAtTime(0.35 * this.masterVolume, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.connect(gain).connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.25);
+    // Crunch
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this.noise(0.2);
+    const nGain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 600;
+    nGain.gain.setValueAtTime(0.2 * this.masterVolume, now);
+    nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    noise.connect(filter).connect(nGain).connect(this.ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.2);
+  }
+
+  playFireIgnite() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Whoosh flame
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = this.noise(0.6);
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(500, now);
+    filter.frequency.exponentialRampToValueAtTime(3000, now + 0.15);
+    filter.frequency.exponentialRampToValueAtTime(800, now + 0.6);
+    filter.Q.value = 1;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.18 * this.masterVolume, now + 0.1);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+    noise.connect(filter).connect(gain).connect(this.ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.6);
+  }
+
+  playGateDefenseStart() {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    // Alarm bell — two quick tones
+    for (let i = 0; i < 2; i++) {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      const start = now + i * 0.2;
+      osc.frequency.value = 440;
+      gain.gain.setValueAtTime(0.2 * this.masterVolume, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.15);
+      osc.connect(gain).connect(this.ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.15);
+    }
+    // Low rumble
+    const osc2 = this.ctx.createOscillator();
+    const gain2 = this.ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.value = 80;
+    gain2.gain.setValueAtTime(0.15 * this.masterVolume, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    osc2.connect(gain2).connect(this.ctx.destination);
+    osc2.start(now);
+    osc2.stop(now + 0.8);
   }
 }
