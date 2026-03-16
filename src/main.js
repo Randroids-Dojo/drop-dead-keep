@@ -221,7 +221,7 @@ function handleProjectileImpact(proj) {
   // Check zombie hits
   let kills = 0;
   for (const zombie of waveSystem.zombies) {
-    if (!zombie.alive || zombie.falling) continue;
+    if (!zombie.alive || zombie.falling || zombie.plankState) continue;
     if (zombie.isInRadius(impact.x, impact.y, stats.splashRadius * scale)) {
       const dx = zombie.x - impact.x;
       const dy = zombie.y - impact.y;
@@ -229,13 +229,13 @@ function handleProjectileImpact(proj) {
       const dmgFactor = 1 - dist / (stats.splashRadius * scale);
       const damage = Math.max(1, Math.ceil(stats.damage * dmgFactor));
 
-      const wasBuilding = zombie.isBuilding;
+      const wasBecomingPlank = zombie.plankState === 'becoming';
       zombie.takeDamage(damage);
 
       if (!zombie.alive) {
         kills++;
         scoring.onZombieKilledByProjectile(zombie.x, zombie.y);
-        if (wasBuilding) {
+        if (wasBecomingPlank) {
           scoring.onBuilderKilledWhileBuilding(zombie.x, zombie.y);
         }
         audio.play('zombie_splat');

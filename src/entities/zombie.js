@@ -2,7 +2,6 @@
 
 import { getSprites } from '../sprites/pixel-data.js';
 import { drawSprite, setupPixelCanvas } from '../sprites/sprite-renderer.js';
-import { drawPixelBar } from '../sprites/pixel-font.js';
 
 export const ZombieType = {
   SHAMBLER: 'shambler',
@@ -57,17 +56,11 @@ export class Zombie {
     this.facingRight = true;
     this.flashTimer = 0;
 
-    // Builder-specific
-    this.isBuilding = false;
-    this.buildProgress = 0;
-    this.targetBridge = null;
-    this.carriedPlanks = type === ZombieType.PLANK_CARRIER;
-    this.hasPlacedPlanks = false;
-    this.canRepairBridge = type === ZombieType.ENGINEER || type === ZombieType.BRUTE;
-    this.bruteRebuildTime = 3; // Brutes rebuild fast
-
-    // Sprinter-specific
-    this.canJumpSmallGaps = type === ZombieType.SPRINTER;
+    // Plank mechanic — any zombie can become a bridge plank
+    // plankState: null (normal), 'becoming' (positioning), 'placed' (is the bridge)
+    this.plankState = null;
+    this.plankTimer = 0;
+    this.plankBridge = null;
   }
 
   setPath(waypoints) {
@@ -95,21 +88,29 @@ export class Zombie {
       return;
     }
 
-    // Building behavior (engineers and brutes)
-    if (this.canRepairBridge && this.isBuilding) {
-      this.buildProgress += dt;
-      const buildTime = this.type === ZombieType.BRUTE
-        ? this.bruteRebuildTime
-        : (this.targetBridge ? this.targetBridge.rebuildTime : 5);
-      if (this.buildProgress >= buildTime && this.targetBridge) {
-        const rebuildHp = this.type === ZombieType.BRUTE ? 0.4 : 0.5;
-        this.targetBridge.rebuild(rebuildHp);
-        this.isBuilding = false;
-        this.targetBridge = null;
-        this.buildProgress = 0;
+    // Zombie is positioning itself to become a plank — slide to bridge center
+    if (this.plankState === 'becoming') {
+      this.plankTimer += dt;
+      // Lerp toward the bridge center during the positioning second
+      if (this.plankBridge) {
+        const t = Math.min(this.plankTimer / 0.5, 1); // reach center in 0.5s
+        this.x += (this.plankBridge.x - this.x) * t * dt * 4;
+        this.y += (this.plankBridge.y - this.y) * t * dt * 4;
+      }
+      if (this.plankTimer >= 1.0) {
+        // Done positioning — snap to bridge center and become the plank
+        this.plankState = 'placed';
+        if (this.plankBridge) {
+          this.x = this.plankBridge.x;
+          this.y = this.plankBridge.y;
+          this.plankBridge.zombieBridged = true;
+        }
       }
       return;
     }
+
+    // Already a plank — stay put, do nothing
+    if (this.plankState === 'placed') return;
 
     // Follow waypoints
     if (this.targetWaypoint < this.waypoints.length) {
@@ -120,28 +121,12 @@ export class Zombie {
 
       if (dist < 5) {
         // Check if this waypoint has a bridge
-        if (wp.bridge && wp.bridge.destroyed) {
-          // Bridge is destroyed!
-          if (this.canRepairBridge && !this.isBuilding) {
-            // Engineer or brute starts repairing
-            this.isBuilding = true;
-            this.buildProgress = 0;
-            this.targetBridge = wp.bridge;
-            return;
-          } else if (this.type === ZombieType.PLANK_CARRIER && !this.hasPlacedPlanks) {
-            // Plank carrier drops planks — create a temporary crossing
-            this.hasPlacedPlanks = true;
-            wp.bridge.rebuild(0.15); // Very weak crossing
-            this.carriedPlanks = false;
-          } else if (this.canJumpSmallGaps && wp.bridge.width < 80) {
-            // Sprinter can jump small gaps
-            this.targetWaypoint++;
-          } else {
-            // Fall into the gap!
-            this.falling = true;
-            this.fallVelocity = 0;
-            return;
-          }
+        if (wp.bridge && wp.bridge.destroyed && !wp.bridge.zombieBridged) {
+          // Sacrifice self to become the bridge plank
+          this.plankState = 'becoming';
+          this.plankTimer = 0;
+          this.plankBridge = wp.bridge;
+          return;
         }
         this.targetWaypoint++;
       } else {
@@ -166,6 +151,11 @@ export class Zombie {
     if (this.hp <= 0) {
       this.hp = 0;
       this.alive = false;
+      // If this zombie was a bridge plank, clear the bridge so a new zombie must sacrifice
+      if (this.plankState && this.plankBridge) {
+        this.plankBridge.zombieBridged = false;
+        this.plankState = null;
+      }
     }
   }
 
@@ -189,10 +179,10 @@ export class Zombie {
     const y = this.y;
 
     // Walk bob
-    const bob = this.falling ? 0 : Math.sin(this.walkCycle) * 2;
+    const bob = (this.falling || this.plankState) ? 0 : Math.sin(this.walkCycle) * 2;
 
     // Sprite scale: size / 5 so sprite scales with perspective
-    const spriteScale = s / 5;
+    let spriteScale = s / 5;
 
     // Determine draw options
     const opts = {
@@ -203,6 +193,41 @@ export class Zombie {
     if (this.falling) {
       opts.rotation = this.fallVelocity * 0.003;
       opts.alpha = Math.max(0, 1 - this.fallVelocity / 300);
+    }
+
+    // Plank states: draw manually with transforms centered on the bridge gap
+    if (this.plankState && this.plankBridge) {
+      const bridge = this.plankBridge;
+      const targetScale = bridge.width / (spriteFrame.height || 1);
+      let rotation, alpha, drawScale, cx, cy;
+
+      if (this.plankState === 'becoming') {
+        const progress = Math.min(this.plankTimer, 1);
+        rotation = (Math.PI / 2) * progress;
+        drawScale = spriteScale + (targetScale - spriteScale) * progress;
+        alpha = 1;
+        // Lerp position toward bridge center
+        cx = x + (bridge.x - x) * progress;
+        cy = y + (bridge.y - y) * progress;
+      } else {
+        rotation = Math.PI / 2;
+        drawScale = targetScale;
+        alpha = 0.85;
+        cx = bridge.x;
+        cy = bridge.y;
+      }
+
+      const w = spriteFrame.width * drawScale;
+      const h = spriteFrame.height * drawScale;
+
+      ctx.save();
+      setupPixelCanvas(ctx);
+      ctx.globalAlpha = alpha;
+      ctx.translate(Math.round(cx), Math.round(cy));
+      ctx.rotate(rotation);
+      ctx.drawImage(spriteFrame, -w / 2, -h / 2, w, h);
+      ctx.restore();
+      return;
     }
 
     ctx.save();
@@ -224,19 +249,6 @@ export class Zombie {
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(drawX, drawY, Math.round(w), Math.round(h));
       ctx.restore();
-    }
-
-    // Build progress bar (pixel-perfect)
-    if (this.isBuilding) {
-      const barW = Math.round(s * 2);
-      const barH = 4;
-      const barX = Math.round(x - barW / 2);
-      const barY = Math.round(y + bob - spriteFrame.height * spriteScale - 4);
-      const buildTime = this.type === ZombieType.BRUTE
-        ? this.bruteRebuildTime
-        : (this.targetBridge ? this.targetBridge.rebuildTime : 5);
-      const fillColor = this.type === ZombieType.BRUTE ? '#c0392b' : '#e67e22';
-      drawPixelBar(ctx, barX, barY, barW, barH, this.buildProgress, buildTime, { fillColor });
     }
 
     ctx.restore();

@@ -140,24 +140,13 @@ export class GameMap {
 
     const sprites = getSprites();
 
-    // Sky — solid color bands
-    const skyColors = ['#0a0a1a', '#0f0f24', '#14142e', '#1a1a2e', '#2d1b4e'];
-    const bandHeight = Math.ceil(this.height / skyColors.length);
-    for (let i = 0; i < skyColors.length; i++) {
-      ctx.fillStyle = skyColors[i];
+    // Mountain ground — earthy color bands getting lighter toward the bottom (closer)
+    const groundColors = ['#1a1a12', '#22201a', '#2a2820', '#302e24', '#3a3828'];
+    const bandHeight = Math.ceil(this.height / groundColors.length);
+    for (let i = 0; i < groundColors.length; i++) {
+      ctx.fillStyle = groundColors[i];
       ctx.fillRect(0, i * bandHeight, this.width, bandHeight);
     }
-
-    // Stars — pixel sprites
-    for (let i = 0; i < 60; i++) {
-      const sx = (Math.sin(i * 127.1 + 33) * 0.5 + 0.5) * this.width;
-      const sy = (Math.cos(i * 311.7 + 17) * 0.5 + 0.5) * this.height * 0.5;
-      const brightness = 0.3 + (Math.sin(i * 73 + Date.now() * 0.001) * 0.5 + 0.5) * 0.7;
-      drawSpriteAt(ctx, sprites.env.star, sx, sy, 1);
-    }
-
-    // Moon — pixel sprite
-    drawSpriteAt(ctx, sprites.env.moon, this.width - 110, 30, 3);
 
     // Terrain (cliff faces on sides)
     this.drawTerrain(ctx, sprites);
