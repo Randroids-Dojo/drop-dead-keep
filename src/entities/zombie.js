@@ -88,13 +88,21 @@ export class Zombie {
       return;
     }
 
-    // Zombie is positioning itself to become a plank
+    // Zombie is positioning itself to become a plank — slide to bridge center
     if (this.plankState === 'becoming') {
       this.plankTimer += dt;
+      // Lerp toward the bridge center during the positioning second
+      if (this.plankBridge) {
+        const t = Math.min(this.plankTimer / 0.5, 1); // reach center in 0.5s
+        this.x += (this.plankBridge.x - this.x) * t * dt * 4;
+        this.y += (this.plankBridge.y - this.y) * t * dt * 4;
+      }
       if (this.plankTimer >= 1.0) {
-        // Done positioning — become the bridge plank
+        // Done positioning — snap to bridge center and become the plank
         this.plankState = 'placed';
         if (this.plankBridge) {
+          this.x = this.plankBridge.x;
+          this.y = this.plankBridge.y;
           this.plankBridge.zombieBridged = true;
         }
       }

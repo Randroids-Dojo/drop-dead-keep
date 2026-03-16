@@ -12,7 +12,7 @@ export const LEVELS = {
     spawnPoint: { x: 400, y: 50 },
     gatePoint: { x: 400, y: 680 },
     bridges: [
-      { x: 400, y: 300, width: 100, type: BridgeType.ROPE },
+      { x: 400, y: 300, width: 50, type: BridgeType.ROPE },
     ],
     waypoints: [
       { x: 400, y: 120 },
@@ -63,8 +63,8 @@ export const LEVELS = {
     spawnPoint: { x: 400, y: 50 },
     gatePoint: { x: 400, y: 680 },
     bridges: [
-      { x: 350, y: 220, width: 90, type: BridgeType.ROPE },
-      { x: 450, y: 440, width: 100, type: BridgeType.ROPE },
+      { x: 350, y: 220, width: 45, type: BridgeType.ROPE },
+      { x: 450, y: 440, width: 50, type: BridgeType.ROPE },
     ],
     waypoints: [
       { x: 400, y: 120 },
@@ -112,8 +112,8 @@ export const LEVELS = {
     spawnPoint: { x: 400, y: 50 },
     gatePoint: { x: 400, y: 680 },
     bridges: [
-      { x: 350, y: 200, width: 70, type: BridgeType.ROPE }, // small gap, sprinters can jump
-      { x: 450, y: 400, width: 110, type: BridgeType.WOODEN },
+      { x: 350, y: 200, width: 35, type: BridgeType.ROPE },
+      { x: 450, y: 400, width: 55, type: BridgeType.WOODEN },
     ],
     waypoints: [
       { x: 400, y: 110 },
@@ -158,8 +158,8 @@ export const LEVELS = {
     spawnPoint: { x: 400, y: 50 },
     gatePoint: { x: 400, y: 680 },
     bridges: [
-      { x: 350, y: 200, width: 90, type: BridgeType.ROPE },
-      { x: 450, y: 420, width: 110, type: BridgeType.WOODEN },
+      { x: 350, y: 200, width: 45, type: BridgeType.ROPE },
+      { x: 450, y: 420, width: 55, type: BridgeType.WOODEN },
     ],
     waypoints: [
       { x: 400, y: 110 },
@@ -212,9 +212,9 @@ export const LEVELS = {
     spawnPoint: { x: 400, y: 50 },
     gatePoint: { x: 400, y: 680 },
     bridges: [
-      { x: 320, y: 180, width: 80, type: BridgeType.ROPE },
-      { x: 480, y: 320, width: 100, type: BridgeType.WOODEN },
-      { x: 380, y: 480, width: 110, type: BridgeType.WOODEN },
+      { x: 320, y: 180, width: 40, type: BridgeType.ROPE },
+      { x: 480, y: 320, width: 50, type: BridgeType.WOODEN },
+      { x: 380, y: 480, width: 55, type: BridgeType.WOODEN },
     ],
     waypoints: [
       { x: 380, y: 100 },
